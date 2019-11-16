@@ -1,0 +1,40 @@
+{
+  "name": "hrgulf-knowledge",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "start": "node ./backend/server.production.js",
+    "startDev": "node ./bin/start-webapp",
+    "startMon": "nodemon ./backend/server.development.js",
+    "startProd": "node ./backend/server.production.js",
+    "buildProd": "rimraf backend/server.production.js && webpack --mode production --config webpack.server.config.js",
+    "buildDev": "rimraf backend/server.development.js && webpack --mode development --config webpack.server.config.js --watch"
+  },
+  "dependencies": {
+    "cookie-parser": "~1.4.4",
+    "cors": "^2.8.5",
+    "debug": "~4.1.1",
+    "express": "~4.17.1",
+    "http-errors": "~1.7.3",
+    "jsonwebtoken": "^8.5.1",
+    "morgan": "~1.9.1",
+    "mysql2": "^2.0.0",
+    "pug": "2.0.4",
+    "sprintf-js": "^1.1.2"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.5.5",
+    "@babel/polyfill": "^7.6.0",
+    "@babel/preset-env": "^7.5.5",
+    "@babel/register": "^7.5.5",
+    "babel-loader": "^8.0.6",
+    "dotenv": "^8.2.0",
+    "nodemon": "^1.19.2",
+    "rimraf": "^3.0.0",
+    "tracer": "^1.0.1",
+    "webpack": "^4.39.3",
+    "webpack-cli": "^3.3.8",
+    "webpack-node-externals": "^1.7.2",
+    "webpack-obfuscator": "^0.18.3"
+  }
+}
