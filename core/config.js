@@ -1,17 +1,17 @@
-require('dotenv').config();
+require("dotenv").config();
 
 const server = {
     isDev: false,
     port: process.env.HTTP_PORT,
     sslPort: process.env.HTTPS_PORT,
     baseUrl: process.env.BASE_URL,
-    name: 'hrgulf.org',
-    description: 'Portal in hrgulf.org',
-    author: 'Zhenlong J.',
-    secret: 'hrgulf@@',
-    sslKey: './sslcert/server.key',
-    sslCert: './sslcert/1e720c418ffe9875.crt',
-    sslCA: './sslcert/gd_bundle-g2-g1.crt',
+    name: "hrgulf.org",
+    description: "Portal in hrgulf.org",
+    author: "Zhenlong J.",
+    secret: "hrgulf@@",
+    sslKey: "./sslcert/server.key",
+    sslCert: "./sslcert/1e720c418ffe9875.crt",
+    sslCA: "./sslcert/gd_bundle-g2-g1.crt",
     environment: process.env.NODE_ENV,
 };
 const mysql = {
@@ -23,13 +23,14 @@ const mysql = {
     database: process.env.MYSQL_DATABASE,
 };
 const session = {
-    name: 'hrgulf.org',
-    key: 'hrgulf.org',
-    secret: 'hrgulf.org@@',
-    secretAdmin: 'hrgulf.org_admin@@',
+    name: "hrgulf.org",
+    key: "hrgulf.org",
+    secret: "hrgulf.org@@",
+    secretAdmin: "hrgulf.org_admin@@",
 };
 const dbTblName = {
-    users: 'users',
+    users: "users",
+    posts: "posts",
 };
 
 export {
