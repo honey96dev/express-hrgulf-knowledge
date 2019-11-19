@@ -19,7 +19,7 @@ const listProc = async (req, res, next) => {
   const start = pageSize * (page - 1);
 
   let sql = sprintf("SELECT P.*, U.firstName, U.lastName FROM `%s` P JOIN `%s` U ON U.id = P.userId WHERE P.deletedDate = '%s' AND P.userId LIKE '%s' ORDER BY P.timestamp DESC LIMIT %d, %d;", dbTblName.posts, dbTblName.users, "", userId || "%%", start, pageSize);
-  tracer.debug(sql);
+  tracer.debug(req.headers['x-forwarded-for'], req.connection.remoteAddress);
   try {
     let rows = await db.query(sql, null);
     sql = sprintf("SELECT COUNT(`id`) `count` FROM `%s` WHERE `deletedDate` = '%s' AND `userId` LIKE '%s';", dbTblName.posts, "", userId || "%%");

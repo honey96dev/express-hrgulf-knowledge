@@ -5,6 +5,7 @@ import path from "path";
 import cookieParser from "cookie-parser";
 import logger from "morgan";
 import cors from "cors";
+import helmet from "helmet";
 
 import apiRouter from "./routes/api";
 import {session} from "./core/config";
@@ -22,6 +23,7 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 
 process.env.NODE_ENV !== "production" && app.use(cors());
+app.use(helmet());
 
 app.use('/api/posts/save', expressJwt({secret: session.secret}));
 
