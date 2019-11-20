@@ -26,6 +26,7 @@ export default {
   invalidParameters: "Invalid Parameters",
   notUploaded: "Not uploaded",
   notFound: "Not Found",
+  noData: "There is no data",
   successfullyUploaded: "Successfully uploaded",
   successfullyPosted: "Successfully posted",
   successfullyJoined: "Successfully joined",

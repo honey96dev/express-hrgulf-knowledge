@@ -11,14 +11,13 @@ import consts from "../../core/consts";
 const router = express.Router();
 
 const signInProc = async (req, res, next) => {
-  const lang = req.get(consts.lang);
+  const lang = req.get(consts.lang) || consts.defaultLanguage;
   const langs = strings[lang];
   const {email, password} = req.body;
 
-  let sql = sprintf("SELECT `email` FROM `%s` WHERE BINARY `email` = '%s';", dbTblName.users, email);
-
+  let sql = sprintf("SELECT `email` FROM `%s` WHERE BINARY `email` = ?;", dbTblName.users);
   try {
-    let rows = await db.query(sql, null);
+    let rows = await db.query(sql, [email]);
     if (rows.length === 0) {
       res.status(200).send({
         result: langs.error,
@@ -28,8 +27,8 @@ const signInProc = async (req, res, next) => {
     }
 
     const hash = myCrypto.hmacHex(password);
-    sql = sprintf("SELECT U.* FROM `%s` U WHERE BINARY U.email = '%s' AND BINARY U.hash = '%s';", dbTblName.users, email, hash);
-    rows = await db.query(sql, null);
+    sql = sprintf("SELECT U.* FROM `%s` U WHERE BINARY U.email = ? AND BINARY U.hash = ?;", dbTblName.users);
+    rows = await db.query(sql, [email, hash]);
 
     if (rows.length === 0) {
       res.status(200).send({
@@ -69,14 +68,14 @@ const signInProc = async (req, res, next) => {
 };
 
 const signUpProc = async (req, res, next) => {
-  const lang = req.get(consts.lang);
+  const lang = req.get(consts.lang) || consts.defaultLanguage;
   const langs = strings[lang];
   const {email, password, username, firstName, lastName, gender, birthday, jobTitle, sector, company, city, phone} = req.body;
   const hash = myCrypto.hmacHex(password);
 
-  let sql = sprintf("SELECT `email` FROM `%s` WHERE BINARY `email` = '%s';", dbTblName.users, email);
+  let sql = sprintf("SELECT `email` FROM `%s` WHERE BINARY `email` = ?;", dbTblName.users);
   try {
-    let rows = await db.query(sql, null);
+    let rows = await db.query(sql, [email]);
     if (rows.length > 0) {
       res.status(200).send({
         result: langs.error,

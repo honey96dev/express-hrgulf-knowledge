@@ -31,6 +31,8 @@ const session = {
 const dbTblName = {
     users: "users",
     posts: "posts",
+    comments: "comments",
+    comments_count: "comments_count",
 };
 
 export {

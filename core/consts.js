@@ -1,5 +1,5 @@
 export const uploadPath = {
-  mediaSlider: "/uploads/media-slider",
+  posts: "uploads/posts",
 };
 export const success = "success";
 export const error = "error";

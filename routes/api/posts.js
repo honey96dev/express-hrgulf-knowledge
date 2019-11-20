@@ -1,6 +1,10 @@
 import express from "express";
 import {sprintf} from "sprintf-js";
 import dateformat from "dateformat";
+import path from 'path';
+import mkdirp from 'mkdirp';
+import fs from "fs";
+import uuid from "uuid";
 import {dbTblName} from "../../core/config";
 import db from "../../core/db";
 import strings from "../../core/strings";
@@ -18,10 +22,10 @@ const listProc = async (req, res, next) => {
 
   const start = pageSize * (page - 1);
 
-  let sql = sprintf("SELECT P.*, U.firstName, U.lastName FROM `%s` P JOIN `%s` U ON U.id = P.userId WHERE P.deletedDate = '%s' AND P.userId LIKE '%s' ORDER BY P.timestamp DESC LIMIT %d, %d;", dbTblName.posts, dbTblName.users, "", userId || "%%", start, pageSize);
-  tracer.debug(req.headers['x-forwarded-for'], req.connection.remoteAddress);
+  let sql = sprintf("SELECT P.*, U.firstName, U.lastName, IFNULL(C.comments, 0) `comments` FROM `%s` P JOIN `%s` U ON U.id = P.userId LEFT JOIN `%s` C ON C.postId = P.id WHERE P.deletedDate = ? AND P.userId LIKE ? ORDER BY P.timestamp DESC LIMIT ?, ?;", dbTblName.posts, dbTblName.users, dbTblName.comments_count);
+
   try {
-    let rows = await db.query(sql, null);
+    let rows = await db.query(sql, ["", userId || "%%", start, pageSize]);
     sql = sprintf("SELECT COUNT(`id`) `count` FROM `%s` WHERE `deletedDate` = '%s' AND `userId` LIKE '%s';", dbTblName.posts, "", userId || "%%");
     let count = await db.query(sql, null);
     let pageCount = 0;
@@ -46,18 +50,138 @@ const listProc = async (req, res, next) => {
 const saveProc = async (req, res, next) => {
   const lang = req.get(consts.lang) || consts.defaultLanguage;
   const langs = strings[lang];
-  const {id, title, description, media, userId} = req.body;
+  const {id, title, description, file, userId} = req.body;
+
+  const appDir = process.cwd();
+  const fileDir = path.join(appDir, "public", consts.uploadPath.posts);
+  const fileName = sprintf("%s%s", uuid(), path.extname(file.path));
+  const filePath = path.join(fileDir, fileName);
+  const writable = fs.createWriteStream(filePath);
+  const media = sprintf("%s/%s", consts.uploadPath.posts, fileName);
+  mkdirp(fileDir, () => {
+    file.on("end", async e => {
+      const today = new Date();
+      const date = dateformat(today, "yyyy-mm-dd");
+      const time = dateformat(today, "hh:MM TT");
+      const timestamp = today.getTime();
+
+      const newRows = [
+        [id || null, timestamp, userId, date, time, title, description, media, ""],
+      ];
+      let sql;
+      let rows;
+      if (id) {
+        sql = sprintf("SELECT * FROM `%s` WHERE `id` = ?;", dbTblName.posts);
+        rows = await db.query(sql, [id]);
+        if (rows.length > 0) {
+          const oldFilename = path.join(fileDir, path.basename(rows[0]["media"]));
+          tracer.debug(oldFilename);
+          fs.unlink(oldFilename, e => {
+
+          });
+        }
+      }
+      sql = sprintf("INSERT INTO `%s` VALUES ? ON DUPLICATE KEY UPDATE `title` = VALUES(`title`), `description` = VALUES(`description`), `media` = VALUES(`media`);", dbTblName.posts);
+      try {
+        rows = await db.query(sql, [newRows]);
+        res.status(200).send({
+          result: langs.success,
+          message: langs.successfullySaved,
+          data: rows,
+        });
+      } catch (err) {
+        tracer.error(JSON.stringify(err));
+        tracer.error(__filename);
+        res.status(200).send({
+          result: langs.error,
+          message: langs.unknownServerError,
+          err,
+        });
+      }
+    });
+    file.on("error", err => {
+      tracer.error(JSON.stringify(err));
+      tracer.error(__filename);
+      res.status(200).send({
+        result: langs.error,
+        message: langs.unknownServerError,
+        err,
+      });
+    });
+    file.pipe(writable);
+  });
+};
+
+const getProc = async (req, res, next) => {
+  const lang = req.get(consts.lang) || consts.defaultLanguage;
+  const langs = strings[lang];
+  const {id, userId} = req.body;
+
+  let sql = sprintf("SELECT P.*, U.firstName, U.lastName, C.userId `commentId` FROM `%s` P JOIN `%s` U ON U.id = P.userId LEFT JOIN `%s` C ON C.postId = P.id AND C.userId = ? WHERE P.id = ?;", dbTblName.posts, dbTblName.users, dbTblName.comments);
+
+  try {
+    let rows = await db.query(sql, [userId || 0, id]);
+    if (rows.length > 0) {
+      res.status(200).send({
+        result: langs.success,
+        data: rows[0],
+      });
+    } else {
+      res.status(200).send({
+        result: langs.error,
+        message: langs.noData,
+      });
+    }
+  } catch (err) {
+    tracer.error(JSON.stringify(err));
+    tracer.error(__filename);
+    res.status(200).send({
+      result: langs.error,
+      message: langs.unknownServerError,
+      err,
+    });
+  }
+};
+
+const commentList = async (req, res, next) => {
+  const lang = req.get(consts.lang) || consts.defaultLanguage;
+  const langs = strings[lang];
+  const {postId} = req.body;
+
+  let sql = sprintf("SELECT C.*, U.firstName, U.lastName FROM `%s` C JOIN `%s` U ON U.id = C.userId WHERE C.postId = ? ORDER BY C.timestamp DESC;", dbTblName.comments, dbTblName.users);
+
+  try {
+    let rows = await db.query(sql, [postId]);
+    res.status(200).send({
+      result: langs.success,
+      data: rows,
+    });
+  } catch (err) {
+    tracer.error(JSON.stringify(err));
+    tracer.error(__filename);
+    res.status(200).send({
+      result: langs.error,
+      message: langs.unknownServerError,
+      err,
+    });
+  }
+};
+
+const writeComment = async (req, res, next) => {
+  const lang = req.get(consts.lang) || consts.defaultLanguage;
+  const langs = strings[lang];
+  const {commentId, userId, comment} = req.body;
 
   const today = new Date();
-
   const date = dateformat(today, "yyyy-mm-dd");
   const time = dateformat(today, "hh:MM TT");
   const timestamp = today.getTime();
 
   const newRows = [
-    [id || null, timestamp, userId, date, time, title, description, media, ''],
+    [commentId, userId, timestamp, date, time, comment, ""],
   ];
-  let sql = sprintf("INSERT INTO `%s` VALUES ? ON DUPLICATE KEY UPDATE `title` = VALUES(`title`), `description` = VALUES(`description`), `media` = VALUES(`media`);", dbTblName.posts);
+  let sql = sprintf("INSERT INTO `%s` VALUES ? ON DUPLICATE KEY UPDATE comment = VALUES(`comment`);", dbTblName.comments);
+
   try {
     let rows = await db.query(sql, [newRows]);
     res.status(200).send({
@@ -78,5 +202,8 @@ const saveProc = async (req, res, next) => {
 
 router.post("/list", listProc);
 router.post("/save", saveProc);
+router.post("/get", getProc);
+router.post("/comment-list", commentList);
+router.post("/write-comment", writeComment);
 
 export default router;

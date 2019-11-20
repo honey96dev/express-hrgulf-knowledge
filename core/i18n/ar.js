@@ -26,6 +26,7 @@ export default {
   invalidParameters: "معلمات غير صالحة",
   notUploaded: "لم يتم الرفع",
   notFound: "لم يتم العثور على",
+  noData: "ليس هنالك معلومات",
   successfullyUploaded: "تم الرفع بنجاح",
   successfullyPosted: "تم النشر بنجاح",
   successfullyJoined: "تم التسجيل بنجاح",
