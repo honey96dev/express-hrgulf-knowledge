@@ -11,8 +11,6 @@ import strings from "../../core/strings";
 import tracer from "../../core/tracer";
 import consts from "../../core/consts";
 
-const router = express.Router();
-
 const listProc = async (req, res, next) => {
   const lang = req.get(consts.lang) || consts.defaultLanguage;
   const langs = strings[lang];
@@ -51,6 +49,40 @@ const saveProc = async (req, res, next) => {
   const lang = req.get(consts.lang) || consts.defaultLanguage;
   const langs = strings[lang];
   const {id, title, description, file, userId} = req.body;
+
+  if (!!id && (!file || file === "null")) {
+    const newRows = [
+      [id || null, 0, userId, "", "", title, description, "", ""],
+    ];
+    let sql = sprintf("INSERT INTO `%s` VALUES ? ON DUPLICATE KEY UPDATE `title` = VALUES(`title`), `description` = VALUES(`description`);", dbTblName.posts);
+    try {
+      let rows = await db.query(sql, [newRows]);
+      res.status(200).send({
+        result: langs.success,
+        message: langs.successfullySaved,
+        data: rows,
+      });
+    } catch (err) {
+      tracer.error(JSON.stringify(err));
+      tracer.error(__filename);
+      res.status(200).send({
+        result: langs.error,
+        message: langs.unknownServerError,
+        err,
+      });
+    }
+    return;
+  }
+
+  if (!file || file === "null") {
+    res.status(200).send({
+      result: langs.error,
+      message: langs.unknownServerError,
+    });
+    return;
+  }
+
+  tracer.debug(req.body);
 
   const appDir = process.cwd();
   const fileDir = path.join(appDir, "public", consts.uploadPath.posts);
@@ -199,6 +231,8 @@ const writeComment = async (req, res, next) => {
     });
   }
 };
+
+const router = express.Router();
 
 router.post("/list", listProc);
 router.post("/save", saveProc);

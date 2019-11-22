@@ -8,8 +8,6 @@ import strings from "../../core/strings";
 import tracer from "../../core/tracer";
 import consts from "../../core/consts";
 
-const router = express.Router();
-
 const signInProc = async (req, res, next) => {
   const lang = req.get(consts.lang) || consts.defaultLanguage;
   const langs = strings[lang];
@@ -105,6 +103,8 @@ const signUpProc = async (req, res, next) => {
     });
   }
 };
+
+const router = express.Router();
 
 router.post("/sign-in", signInProc);
 router.post("/sign-up", signUpProc);
