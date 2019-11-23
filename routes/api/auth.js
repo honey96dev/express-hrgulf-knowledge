@@ -84,7 +84,7 @@ const signUpProc = async (req, res, next) => {
     const newRows = [
       [null, email, hash, username, firstName, lastName, gender, birthday, jobTitle, sector, company, city, phone, 0, 0],
     ];
-    sql = sprintf("INSERT INTO `%s` VALUES ?;", dbTblName.users, dbTblName.users);
+    sql = sprintf("INSERT INTO `%s` VALUES ?;", dbTblName.users);
     await db.query(sql, [newRows]);
 
     // sendVerificationEmail(email);

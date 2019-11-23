@@ -10,6 +10,7 @@ import helmet from "helmet";
 import Ddos from "ddos";
 
 import apiRouter from "./routes/api";
+import adminApiRouter from "./routes/admin-api";
 import {session} from "./core/config";
 
 const app = express();
@@ -48,11 +49,18 @@ app.use("/api/posts/save", expressJwt({secret: session.secret}));
 app.use("/assets", express.static(path.join(cwd, "public")));
 
 app.use("/api", apiRouter);
+app.use("/admin-api", adminApiRouter);
+
+app.use('/admin', express.static(path.join(cwd, 'admin-frontend')));
+app.get('/admin/*', function (req, res) {
+  res.sendFile(path.join(cwd, 'admin-frontend/index.html'));
+});
 
 app.use(express.static(path.join(cwd, "frontend")));
 app.get("*", (req, res) => {
   res.sendFile(path.join(cwd, "frontend/index.html"));
 });
+
 
 // error handler
 app.use(function(err, req, res, next) {

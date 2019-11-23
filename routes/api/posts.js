@@ -82,8 +82,6 @@ const saveProc = async (req, res, next) => {
     return;
   }
 
-  tracer.debug(req.body);
-
   const appDir = process.cwd();
   const fileDir = path.join(appDir, "public", consts.uploadPath.posts);
   const fileName = sprintf("%s%s", uuid(), path.extname(file.path));
