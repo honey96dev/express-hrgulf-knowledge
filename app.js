@@ -41,7 +41,7 @@ app.use(formData.union());
 
 process.env.NODE_ENV !== "production" && app.use(cors());
 app.use(helmet());
-process.env.NODE_ENV === "production" && app.use(ddos.express);
+// process.env.NODE_ENV === "production" && app.use(ddos.express);
 // app.use("/api/", ddos.express);
 
 app.use("/api/posts/save", expressJwt({secret: session.secret}));

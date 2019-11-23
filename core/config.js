@@ -34,6 +34,7 @@ const dbTblName = {
     posts: "posts",
     comments: "comments",
     comments_count: "comments_count",
+    news: "news",
 };
 
 export {
