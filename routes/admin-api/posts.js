@@ -151,9 +151,12 @@ const deleteProc = async (req, res, next) => {
   const langs = strings[lang];
   const {id} = req.body;
 
-  let sql = sprintf("DELETE FROM `%s` WHERE `id` = ?;", dbTblName.posts);
+  const today = new Date();
+  const date = dateformat(today, "yyyy-mm-dd");
+
+  let sql = sprintf("UPDATE `%s` SET `deletedDate` = ? WHERE `id` = ?;", dbTblName.posts);
   try {
-    await db.query(sql, [id]);
+    await db.query(sql, [date, id]);
     _loadData(req, res, next);
   } catch (err) {
     tracer.error(JSON.stringify(err));
