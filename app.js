@@ -16,9 +16,9 @@ import {session} from "./core/config";
 const app = express();
 const cwd = process.cwd();
 const ddos = new Ddos({
-  maxcount: 100,
-  burst: 20,
-  limit: 80,
+  maxcount: process.env.DDOS_MAXCOUNT,
+  burst: process.env.DDOS_BURST,
+  limit: process.env.DDOS_LIMIT,
 });
 const options = {
   uploadDir: os.tmpdir(),
