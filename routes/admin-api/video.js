@@ -52,7 +52,7 @@ const listProc = async (req, res, next) => {
 const saveProc = async (req, res, next) => {
   const lang = req.get(consts.lang) || consts.defaultLanguage;
   const langs = strings[lang];
-  const {id, title, url, userId} = req.body;
+  const {id, title, url, isFile, userId} = req.body;
 
   const today = new Date();
   const date = dateformat(today, "yyyy-mm-dd");
@@ -60,9 +60,9 @@ const saveProc = async (req, res, next) => {
   const timestamp = today.getTime();
 
   const newRows = [
-    [id || null, timestamp, userId, date, time, title, url, ""],
+    [id || null, timestamp, userId, date, time, title, url, isFile, ""],
   ];
-  let sql = sprintf("INSERT INTO `%s` VALUES ? ON DUPLICATE KEY UPDATE `title` = VALUES(`title`), `url` = VALUES(`url`);", dbTblName.video);
+  let sql = sprintf("INSERT INTO `%s` VALUES ? ON DUPLICATE KEY UPDATE `title` = VALUES(`title`), `url` = VALUES(`url`), `isFile` = VALUES(`isFile`);", dbTblName.video);
   try {
     let rows = await db.query(sql, [newRows]);
     res.status(200).send({
