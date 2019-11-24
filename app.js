@@ -46,10 +46,11 @@ app.use(helmet());
 
 app.use("/api/posts/save", expressJwt({secret: session.secret}));
 
+app.use("/admin/assets", express.static(path.join(cwd, "public")));
 app.use("/assets", express.static(path.join(cwd, "public")));
 
+app.use("/admin/api", adminApiRouter);
 app.use("/api", apiRouter);
-app.use("/admin-api", adminApiRouter);
 
 app.use('/admin', express.static(path.join(cwd, 'admin-frontend')));
 app.get('/admin/*', function (req, res) {
