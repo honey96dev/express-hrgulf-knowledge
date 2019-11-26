@@ -45,6 +45,30 @@ const listProc = async (req, res, next) => {
   }
 };
 
+const latestProc = async (req, res, next) => {
+  const lang = req.get(consts.lang) || consts.defaultLanguage;
+  const langs = strings[lang];
+  let {limit} = req.body;
+
+  let sql = sprintf("SELECT P.*, U.firstName, U.lastName, IFNULL(C.comments, 0) `comments` FROM `%s` P JOIN `%s` U ON U.id = P.userId LEFT JOIN `%s` C ON C.postId = P.id WHERE P.deletedDate = ? ORDER BY P.timestamp DESC LIMIT ?, ?;", dbTblName.posts, dbTblName.users, dbTblName.comments_count);
+
+  try {
+    let rows = await db.query(sql, ["", 0, limit]);
+    res.status(200).send({
+      result: langs.success,
+      data: rows,
+    });
+  } catch (err) {
+    tracer.error(JSON.stringify(err));
+    tracer.error(__filename);
+    res.status(200).send({
+      result: langs.error,
+      message: langs.unknownServerError,
+      err,
+    });
+  }
+};
+
 const saveProc = async (req, res, next) => {
   const lang = req.get(consts.lang) || consts.defaultLanguage;
   const langs = strings[lang];
@@ -233,6 +257,7 @@ const writeComment = async (req, res, next) => {
 const router = express.Router();
 
 router.post("/list", listProc);
+router.post("/latest", latestProc);
 router.post("/save", saveProc);
 router.post("/get", getProc);
 router.post("/comment-list", commentList);
