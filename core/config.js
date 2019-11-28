@@ -36,6 +36,9 @@ const dbTblName = {
   comments_count: "comments_count",
   news: "news",
   video: "video",
+  voteQuestions: "vote_questions",
+  voteAnswers: "vote_answers",
+  voteResult: "vote_result",
 };
 
 export {

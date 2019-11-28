@@ -5,6 +5,7 @@ import profileRouter from "./admin-api/profile";
 import postsRouter from "./admin-api/posts";
 import newRouter from "./admin-api/news";
 import videoRouter from "./admin-api/video";
+import voteRouter from "./admin-api/vote";
 
 const router = express.Router();
 
@@ -13,5 +14,6 @@ router.use("/profile",profileRouter);
 router.use("/posts", postsRouter);
 router.use("/news", newRouter);
 router.use("/video", videoRouter);
+router.use("/vote", voteRouter);
 
 export default router;
