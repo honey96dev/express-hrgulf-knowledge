@@ -39,6 +39,7 @@ const dbTblName = {
   voteQuestions: "vote_questions",
   voteAnswers: "vote_answers",
   voteResult: "vote_result",
+  voteResultCount: "vote_result_count",
 };
 
 export {
