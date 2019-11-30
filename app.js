@@ -46,8 +46,11 @@ app.use(helmet());
 
 app.use("/admin/api", expressJwt({secret: session.secretAdmin})
   .unless({
-    path: ["/admin/api/auth"],
+    path: [
+      /\/admin\/api\/auth\/*/,
+    ]
   }));
+
 app.use("/api/posts/save", expressJwt({secret: session.secret}));
 
 app.use("/admin/assets", express.static(path.join(cwd, "public")));
