@@ -45,6 +45,60 @@ const _loadQuestions = async (req, res, next) => {
   }
 };
 
+const _loadResult = async (req, res, next) => {
+  const lang = req.get(consts.lang) || consts.defaultLanguage;
+  const langs = strings[lang];
+  let {page, pageSize, userId} = req.body;
+  page || (page = 1);
+  pageSize || (pageSize = consts.defaultPageSize);
+  const start = pageSize * (page - 1);
+
+  const today = new Date();
+  const date = dateformat(today, "yyyy-mm-dd");
+  let sql = sprintf("SELECT * FROM `%s` WHERE `startDate` <= ? AND `deletedDate` = ? ORDER BY `endDate` DESC, `timestamp` DESC LIMIT ?, ?;", dbTblName.voteQuestions);
+
+  try {
+    let rows = await db.query(sql, [date, "", start, pageSize]);
+    let rows1;
+
+    sql = sprintf("SELECT COUNT(`id`) `count` FROM `%s` WHERE `startDate` <= ? AND `deletedDate` = ?;", dbTblName.voteQuestions);
+    let count = await db.query(sql, [date, ""]);
+    let pageCount = 0;
+    count.length > 0 && (pageCount = Math.ceil(count[0]["count"] / pageSize));
+
+    for (let row of rows) {
+      row["isEnded"] = row["endDate"] < date;
+
+      sql = sprintf("SELECT A.id, A.answer, IFNULL(C.count, 0) `count` FROM `%s` A LEFT JOIN `%s` C ON C.answerId = A.id WHERE A.questionId = ?;", dbTblName.voteAnswers, dbTblName.voteResultCount);
+      row["answers"] = await db.query(sql, [row.id]);
+      row["answersCount"] = 0;
+      for (let item of row["answers"]) {
+        row["answersCount"] += item.count;
+      }
+
+      sql = sprintf("SELECT COUNT(`questionId`) `count` FROM `%s` WHERE `questionId` = ? AND `userId` = ?;", dbTblName.voteResult);
+      rows1 = await db.query(sql, [row.id, userId]);
+      row["answered"] = !!rows1[0]["count"];
+    }
+
+
+    res.status(200).send({
+      result: langs.success,
+      count: count[0]["count"],
+      pageCount,
+      data: rows,
+    });
+  } catch (err) {
+    tracer.error(JSON.stringify(err));
+    tracer.error(__filename);
+    res.status(200).send({
+      result: langs.error,
+      message: langs.unknownServerError,
+      err,
+    });
+  }
+};
+
 const questionsProc = async (req, res, next) => {
   _loadQuestions(req, res, next);
 };
@@ -261,6 +315,10 @@ const getAnswerProc = async (req, res, next) => {
   }
 };
 
+const resultProc = async (req, res, next) => {
+  _loadResult(req, res, next);
+};
+
 const router = express.Router();
 
 router.post("/questions", questionsProc);
@@ -271,5 +329,6 @@ router.post("/answers", answersProc);
 router.post("/save-answer", saveAnswerProc);
 router.post("/delete-answer", deleteAnswerProc);
 router.post("/get-answer", getAnswerProc);
+router.post("/result", resultProc);
 
 export default router;
