@@ -6,6 +6,10 @@ import db from "../../core/db";
 import strings from "../../core/strings";
 import tracer from "../../core/tracer";
 import consts from "../../core/consts";
+import path from "path";
+import uuid from "uuid";
+import fs from "fs";
+import mkdirp from "mkdirp";
 
 const _loadData = async (req, res, next) => {
   const lang = req.get(consts.lang) || consts.defaultLanguage;
@@ -48,34 +52,98 @@ const listProc = async (req, res, next) => {
 const saveProc = async (req, res, next) => {
   const lang = req.get(consts.lang) || consts.defaultLanguage;
   const langs = strings[lang];
-  const {id, title, description, url, userId} = req.body;
+  const {id, title, description, url, file, userId} = req.body;
 
   const today = new Date();
   const date = dateformat(today, "yyyy-mm-dd");
   const time = dateformat(today, "hh:MM TT");
   const timestamp = today.getTime();
 
-  const newRows = [
-    [id || null, timestamp, userId, date, time, title, description, url, ""],
-  ];
-  let sql = sprintf("INSERT INTO `%s` VALUES ? ON DUPLICATE KEY UPDATE `title` = VALUES(`title`), `description` = VALUES(`description`), `url` = VALUES(`url`);", dbTblName.news);
-  try {
-    let rows = await db.query(sql, [newRows]);
-    res.status(200).send({
-      result: langs.success,
-      message: langs.successfullySaved,
-      data: rows,
-    });
-  } catch (err) {
-    tracer.error(JSON.stringify(err));
-    tracer.error(__filename);
+  if (!!id && (!file || file === "null")) {
+    const newRows = [
+      [id || null, timestamp, userId, date, time, title, description, url, "", ""],
+    ];
+    let sql = sprintf("INSERT INTO `%s` VALUES ? ON DUPLICATE KEY UPDATE `title` = VALUES(`title`), `description` = VALUES(`description`), `url` = VALUES(`url`);", dbTblName.news);
+    try {
+      let rows = await db.query(sql, [newRows]);
+      res.status(200).send({
+        result: langs.success,
+        message: langs.successfullySaved,
+        data: rows,
+      });
+    } catch (err) {
+      tracer.error(JSON.stringify(err));
+      tracer.error(__filename);
+      res.status(200).send({
+        result: langs.error,
+        message: langs.unknownServerError,
+        err,
+      });
+    }
+    return;
+  }
+
+  if (!file || file === "null") {
     res.status(200).send({
       result: langs.error,
       message: langs.unknownServerError,
-      err,
     });
+    return;
   }
 
+  const appDir = process.cwd();
+  const fileDir = path.join(appDir, "public", consts.uploadPath.news);
+  const fileName = sprintf("%s%s", uuid(), path.extname(file.path));
+  const filePath = path.join(fileDir, fileName);
+  const writable = fs.createWriteStream(filePath);
+  const media = sprintf("%s/%s", consts.uploadPath.news, fileName);
+  mkdirp(fileDir, () => {
+    file.on("end", async e => {
+      const newRows = [
+        [id || null, timestamp, userId, date, time, title, description, url, media, ""],
+      ];
+      let sql;
+      let rows;
+      if (id) {
+        sql = sprintf("SELECT * FROM `%s` WHERE `id` = ?;", dbTblName.news);
+        rows = await db.query(sql, [id]);
+        if (rows.length > 0) {
+          const oldFilename = path.join(fileDir, path.basename(rows[0]["media"]));
+          tracer.debug(oldFilename);
+          fs.unlink(oldFilename, e => {
+
+          });
+        }
+      }
+      sql = sprintf("INSERT INTO `%s` VALUES ? ON DUPLICATE KEY UPDATE `title` = VALUES(`title`), `description` = VALUES(`description`), `url` = VALUES(`url`), `media` = VALUES(`media`);", dbTblName.news);
+      try {
+        rows = await db.query(sql, [newRows]);
+        res.status(200).send({
+          result: langs.success,
+          message: langs.successfullySaved,
+          data: rows,
+        });
+      } catch (err) {
+        tracer.error(JSON.stringify(err));
+        tracer.error(__filename);
+        res.status(200).send({
+          result: langs.error,
+          message: langs.unknownServerError,
+          err,
+        });
+      }
+    });
+    file.on("error", err => {
+      tracer.error(JSON.stringify(err));
+      tracer.error(__filename);
+      res.status(200).send({
+        result: langs.error,
+        message: langs.unknownServerError,
+        err,
+      });
+    });
+    file.pipe(writable);
+  });
 };
 
 const deleteProc = async (req, res, next) => {

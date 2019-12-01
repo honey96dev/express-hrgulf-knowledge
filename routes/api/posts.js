@@ -19,13 +19,15 @@ const listProc = async (req, res, next) => {
   pageSize || (pageSize = consts.defaultPageSize);
 
   const start = pageSize * (page - 1);
+  const today = new Date();
+  const date = dateformat(today, "yyyy-mm-dd");
 
-  let sql = sprintf("SELECT P.*, U.firstName, U.lastName, IFNULL(C.comments, 0) `comments` FROM `%s` P JOIN `%s` U ON U.id = P.userId LEFT JOIN `%s` C ON C.postId = P.id WHERE P.deletedDate = ? AND P.userId LIKE ? ORDER BY P.timestamp DESC LIMIT ?, ?;", dbTblName.posts, dbTblName.users, dbTblName.comments_count);
+  let sql = sprintf("SELECT P.*, U.firstName, U.lastName, IFNULL(C.comments, 0) `comments` FROM `%s` P JOIN `%s` U ON U.id = P.userId LEFT JOIN `%s` C ON C.postId = P.id WHERE P.deletedDate = ? AND P.userId LIKE ? AND P.allowedDate BETWEEN '0000-00-00' AND ? ORDER BY P.timestamp DESC LIMIT ?, ?;", dbTblName.posts, dbTblName.users, dbTblName.comments_count);
 
   try {
-    let rows = await db.query(sql, ["", userId || "%%", start, pageSize]);
-    sql = sprintf("SELECT COUNT(`id`) `count` FROM `%s` WHERE `deletedDate` = '%s' AND `userId` LIKE '%s';", dbTblName.posts, "", userId || "%%");
-    let count = await db.query(sql, null);
+    let rows = await db.query(sql, ["", userId || "%%", date, start, pageSize]);
+    sql = sprintf("SELECT COUNT(`id`) `count` FROM `%s` WHERE `deletedDate` = ? AND `userId` LIKE ? AND `allowedDate` BETWEEN '0000-00-00' AND ?;", dbTblName.posts, "", userId || "%%");
+    let count = await db.query(sql, ["", userId || "%%", date]);
     let pageCount = 0;
     count.length > 0 && (pageCount = Math.ceil(count[0]['count'] / pageSize));
     res.status(200).send({
@@ -74,6 +76,11 @@ const saveProc = async (req, res, next) => {
   const langs = strings[lang];
   const {id, title, description, file, userId} = req.body;
 
+  const today = new Date();
+  const date = dateformat(today, "yyyy-mm-dd");
+  const time = dateformat(today, "hh:MM TT");
+  const timestamp = today.getTime();
+
   if (!!id && (!file || file === "null")) {
     const newRows = [
       [id || null, 0, userId, "", "", title, description, "", ""],
@@ -114,11 +121,6 @@ const saveProc = async (req, res, next) => {
   const media = sprintf("%s/%s", consts.uploadPath.posts, fileName);
   mkdirp(fileDir, () => {
     file.on("end", async e => {
-      const today = new Date();
-      const date = dateformat(today, "yyyy-mm-dd");
-      const time = dateformat(today, "hh:MM TT");
-      const timestamp = today.getTime();
-
       const newRows = [
         [id || null, timestamp, userId, date, time, title, description, media, ""],
       ];

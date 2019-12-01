@@ -14,18 +14,26 @@ import consts from "../../core/consts";
 const _loadData = async (req, res, next) => {
   const lang = req.get(consts.lang) || consts.defaultLanguage;
   const langs = strings[lang];
-  let {page, pageSize, userId} = req.body;
+  let {page, pageSize, userId, allowed} = req.body;
   page || (page = 1);
   pageSize || (pageSize = consts.defaultPageSize);
 
   const start = pageSize * (page - 1);
 
-  let sql = sprintf("SELECT P.*, U.firstName, U.lastName, IFNULL(C.comments, 0) `comments` FROM `%s` P JOIN `%s` U ON U.id = P.userId LEFT JOIN `%s` C ON C.postId = P.id WHERE P.deletedDate = ? AND P.userId LIKE ? ORDER BY P.timestamp DESC LIMIT ?, ?;", dbTblName.posts, dbTblName.users, dbTblName.comments_count);
+  let allowedWhere = "";
+  if (allowed === 1) {
+    allowedWhere = "AND `allowedDate` != ''";
+  } else if (allowed === 0) {
+    allowedWhere = "AND `allowedDate` = ''";
+  }
+
+  let sql = sprintf("SELECT P.*, U.firstName, U.lastName, IFNULL(C.comments, 0) `comments` FROM `%s` P JOIN `%s` U ON U.id = P.userId LEFT JOIN `%s` C ON C.postId = P.id WHERE P.deletedDate = ? AND P.userId LIKE ? %s ORDER BY P.timestamp DESC LIMIT ?, ?;", dbTblName.posts, dbTblName.users, dbTblName.comments_count, allowedWhere);
 
   try {
     let rows = await db.query(sql, ["", userId || "%%", start, pageSize]);
-    sql = sprintf("SELECT COUNT(`id`) `count` FROM `%s` WHERE `deletedDate` = '%s' AND `userId` LIKE '%s';", dbTblName.posts, "", userId || "%%");
-    let count = await db.query(sql, null);
+    sql = sprintf("SELECT COUNT(`id`) `count` FROM `%s` WHERE `deletedDate` = ? AND `userId` LIKE ? %s;", dbTblName.posts, allowedWhere);
+    tracer.info(sql);
+    let count = await db.query(sql, ["", userId || "%%"]);
     let pageCount = 0;
     count.length > 0 && (pageCount = Math.ceil(count[0]['count'] / pageSize));
     res.status(200).send({
@@ -224,6 +232,51 @@ const commentList = async (req, res, next) => {
   }
 };
 
+const allowProc = async (req, res, next) => {
+  const lang = req.get(consts.lang) || consts.defaultLanguage;
+  const langs = strings[lang];
+  const {id, allow} = req.body;
+
+  const today = new Date();
+  const date = dateformat(today, "yyyy-mm-dd");
+
+  let sql = sprintf("UPDATE `%s` SET `allowedDate` = ? WHERE `id` = ?;", dbTblName.posts);
+  try {
+    await db.query(sql, [!!allow ? date : "", id]);
+    _loadData(req, res, next);
+  } catch (err) {
+    tracer.error(JSON.stringify(err));
+    tracer.error(__filename);
+    res.status(200).send({
+      result: langs.error,
+      message: langs.unknownServerError,
+      err,
+    });
+  }
+};
+
+const denyProc = async (req, res, next) => {
+  const lang = req.get(consts.lang) || consts.defaultLanguage;
+  const langs = strings[lang];
+  const {id} = req.body;
+
+  const date = "";
+
+  let sql = sprintf("UPDATE `%s` SET `allowedDate` = ? WHERE `id` = ?;", dbTblName.posts);
+  try {
+    await db.query(sql, [date, id]);
+    _loadData(req, res, next);
+  } catch (err) {
+    tracer.error(JSON.stringify(err));
+    tracer.error(__filename);
+    res.status(200).send({
+      result: langs.error,
+      message: langs.unknownServerError,
+      err,
+    });
+  }
+};
+
 const router = express.Router();
 
 router.post("/list", listProc);
@@ -231,5 +284,7 @@ router.post("/save", saveProc);
 router.post("/delete", deleteProc);
 router.post("/get", getProc);
 router.post("/comment-list", commentList);
+router.post("/allow", allowProc);
+// router.post("/deny", denyProc);
 
 export default router;

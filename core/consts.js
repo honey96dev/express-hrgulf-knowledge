@@ -1,5 +1,6 @@
 export const uploadPath = {
   posts: "uploads/posts",
+  news: "uploads/news",
 };
 export const success = "success";
 export const error = "error";
