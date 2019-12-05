@@ -135,8 +135,8 @@ const getProc = async (req, res, next) => {
 const router = express.Router();
 
 router.post("/list", listProc);
-router.post("/save", saveProc);
-router.post("/delete", deleteProc);
+// router.post("/save", saveProc);
+// router.post("/delete", deleteProc);
 router.post("/get", getProc);
 
 export default router;

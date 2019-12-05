@@ -8,6 +8,8 @@ export const lang = "lang";
 export const defaultPageSize = 10;
 export const defaultLanguage = 'en';
 
+export const current = "current";
+
 export default {
   uploadPath,
   success,
@@ -15,4 +17,5 @@ export default {
   lang,
   defaultPageSize,
   defaultLanguage,
+  current,
 }

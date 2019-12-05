@@ -7,28 +7,120 @@ import strings from "../../core/strings";
 import tracer from "../../core/tracer";
 import consts from "../../core/consts";
 
-const _loadData = async (req, res, next) => {
+const _loadPackages = async (req, res, next) => {
   const lang = req.get(consts.lang) || consts.defaultLanguage;
   const langs = strings[lang];
-  let {page, pageSize, userId} = req.body;
+  let {scope, page, pageSize, userId} = req.body;
   page || (page = 1);
   pageSize || (pageSize = consts.defaultPageSize);
   const start = pageSize * (page - 1);
 
   const today = new Date();
   const date = dateformat(today, "yyyy-mm-dd");
-  let sql = sprintf("SELECT * FROM `%s` WHERE `startDate` <= ? AND `deletedDate` = ? ORDER BY `endDate` DESC, `timestamp` DESC LIMIT ?, ?;", dbTblName.voteQuestions);
+  let sql;
+  if (scope === consts.current) {
+    sql = sprintf("SELECT P.*, Q.count `questions` FROM `%s` P JOIN `%s` Q ON Q.packageId = P.id WHERE P.startDate <= ? AND P.endDate >= ? AND P.deletedDate = ? ORDER BY P.endDate DESC, P.timestamp DESC LIMIT ?, ?;", dbTblName.votePackages, dbTblName.voteQuestionsCount);
+  } else {
+    sql = sprintf("SELECT P.*, Q.count `questions` FROM `%s` P JOIN `%s` Q ON Q.packageId = P.id WHERE P.releasedDate != ? AND P.deletedDate = ? ORDER BY P.endDate DESC, P.timestamp DESC LIMIT ?, ?;", dbTblName.votePackages, dbTblName.voteQuestionsCount);
+  }
 
   try {
-    let rows = await db.query(sql, [date, "", start, pageSize]);
+    let rows;
+    if (scope === consts.current) {
+      rows = await db.query(sql, [date, date, "", start, pageSize]);
+    } else {
+      rows = await db.query(sql, ["", "", start, pageSize]);
+    }
     let rows1;
 
-    sql = sprintf("SELECT COUNT(`id`) `count` FROM `%s` WHERE `startDate` <= ? AND `deletedDate` = ?;", dbTblName.voteQuestions);
-    let count = await db.query(sql, [date, ""]);
+    sql = sprintf("SELECT COUNT(`id`) `count` FROM `%s` WHERE `startDate` <= ? AND `endDate` >= ? AND `deletedDate` = ?;", dbTblName.votePackages);
+    let count = await db.query(sql, [date, date, ""]);
     let pageCount = 0;
     count.length > 0 && (pageCount = Math.ceil(count[0]["count"] / pageSize));
 
+    res.status(200).send({
+      result: langs.success,
+      count: count[0]["count"],
+      pageCount,
+      data: rows,
+    });
+  } catch (err) {
+    tracer.error(JSON.stringify(err));
+    tracer.error(__filename);
+    res.status(200).send({
+      result: langs.error,
+      message: langs.unknownServerError,
+      err,
+    });
+  }
+};
+
+const _loadQuestions = async (req, res, next) => {
+  const lang = req.get(consts.lang) || consts.defaultLanguage;
+  const langs = strings[lang];
+  let {packageId, page, pageSize, userId} = req.body;
+  page || (page = 1);
+  pageSize || (pageSize = consts.defaultPageSize);
+  const start = pageSize * (page - 1);
+
+  let sql = sprintf("SELECT Q.*, R.answerId `answered` FROM `%s` Q LEFT JOIN `%s` R ON R.questionId = Q.id AND R.userId = ? WHERE Q.packageId = ? AND Q.deletedDate = ? ORDER BY Q.timestamp;", dbTblName.voteQuestions, dbTblName.voteResult);
+
+  try {
+    let rows = await db.query(sql, [userId, packageId, "", start, pageSize]);
+
+    let rows1;
     for (let row of rows) {
+      sql = sprintf("SELECT * FROM `%s` WHERE `questionId` = ? ORDER BY `timestamp` ASC;", dbTblName.voteAnswers);
+      rows1 = await db.query(sql, [row.id]);
+      row["answers"] = rows1;
+    }
+
+    sql = sprintf("SELECT COUNT(`id`) `count` FROM `%s` WHERE `packageId` = ? AND `deletedDate` = ?;", dbTblName.voteQuestions);
+    let count = await db.query(sql, [packageId, ""]);
+    let pageCount = 0;
+    count.length > 0 && (pageCount = Math.ceil(count[0]["count"] / pageSize));
+
+    res.status(200).send({
+      result: langs.success,
+      count: count[0]["count"],
+      pageCount,
+      data: rows,
+    });
+  } catch (err) {
+    tracer.error(JSON.stringify(err));
+    tracer.error(__filename);
+    res.status(200).send({
+      result: langs.error,
+      message: langs.unknownServerError,
+      err,
+    });
+  }
+};
+
+const _loadResult = async (req, res, next) => {
+  const lang = req.get(consts.lang) || consts.defaultLanguage;
+  const langs = strings[lang];
+  let {packageId, page, pageSize, userId} = req.body;
+  page || (page = 1);
+  pageSize || (pageSize = consts.defaultPageSize);
+  const start = pageSize * (page - 1);
+
+  const today = new Date();
+  const date = dateformat(today, "yyyy-mm-dd");
+  let sql = sprintf("SELECT * FROM `%s` WHERE `packageId` = ? AND `deletedDate` = ? ORDER BY `timestamp` ASC LIMIT ?, ?;", dbTblName.voteQuestions);
+
+  try {
+    let rows = await db.query(sql, [packageId, "", start, pageSize]);
+    let rows1;
+
+    sql = sprintf("SELECT COUNT(`id`) `count` FROM `%s` WHERE `packageId` = ? AND `deletedDate` = ?;", dbTblName.voteQuestions);
+    let count = await db.query(sql, [packageId, ""]);
+    let pageCount = 0;
+    count.length > 0 && (pageCount = Math.ceil(count[0]["count"] / pageSize));
+
+    let index = start + 1;
+    for (let row of rows) {
+      row["index"] = index++;
       row["isEnded"] = row["endDate"] < date;
 
       sql = sprintf("SELECT A.id, A.answer, IFNULL(C.count, 0) `count` FROM `%s` A LEFT JOIN `%s` C ON C.answerId = A.id WHERE A.questionId = ?;", dbTblName.voteAnswers, dbTblName.voteResultCount);
@@ -61,8 +153,49 @@ const _loadData = async (req, res, next) => {
   }
 };
 
-const listProc = async (req, res, next) => {
-  _loadData(req, res, next);
+const packagesProc = async (req, res, next) => {
+  _loadPackages(req, res, next);
+};
+
+const getPackageProc = async (req, res, next) => {
+  const lang = req.get(consts.lang) || consts.defaultLanguage;
+  const langs = strings[lang];
+  let {packageId, page, pageSize} = req.body;
+  page || (page = 1);
+  pageSize || (pageSize = consts.defaultPageSize);
+  const start = pageSize * (page - 1);
+
+  const today = new Date();
+  const date = dateformat(today, "yyyy-mm-dd");
+  let sql = sprintf("SELECT * FROM `%s` Q WHERE Q.id = ?;", dbTblName.votePackages);
+
+  try {
+    let rows = await db.query(sql, [packageId]);
+
+    if (rows.length > 0) {
+      res.status(200).send({
+        result: langs.success,
+        data: rows[0],
+      });
+    } else {
+      res.status(200).send({
+        result: langs.error,
+        message: langs.noData,
+      });
+    }
+  } catch (err) {
+    tracer.error(JSON.stringify(err));
+    tracer.error(__filename);
+    res.status(200).send({
+      result: langs.error,
+      message: langs.unknownServerError,
+      err,
+    });
+  }
+};
+
+const questionsProc = async (req, res, next) => {
+  _loadQuestions(req, res, next);
 };
 
 const getProc = async (req, res, next) => {
@@ -114,7 +247,7 @@ const updateProc = async (req, res, next) => {
 
   try {
     await db.query(sql, [newRows]);
-    _loadData(req, res, next);
+    _loadQuestions(req, res, next);
   } catch (err) {
     tracer.error(JSON.stringify(err));
     tracer.error(__filename);
@@ -126,10 +259,17 @@ const updateProc = async (req, res, next) => {
   }
 };
 
+const resultProc = async (req, res, next) => {
+  _loadResult(req, res, next);
+};
+
 const router = express.Router();
 
-router.post("/list", listProc);
+router.post("/packages", packagesProc);
+router.post("/get-package", getPackageProc);
+router.post("/questions", questionsProc);
 // router.post("/get", getProc);
 router.post("/update", updateProc);
+router.post("/result", resultProc);
 
 export default router;

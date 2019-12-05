@@ -1,6 +1,7 @@
 import express from "express";
 import jwt from "jsonwebtoken";
 import {sprintf} from "sprintf-js";
+import dateformat from "dateformat";
 import {dbTblName, session} from "../../core/config";
 import db from "../../core/db";
 import myCrypto from "../../core/myCrypto";
@@ -70,6 +71,8 @@ const signUpProc = async (req, res, next) => {
   const langs = strings[lang];
   const {email, password, username, firstName, lastName, gender, birthday, jobTitle, sector, company, city, phone} = req.body;
   const hash = myCrypto.hmacHex(password);
+  const today = new Date();
+  const date = dateformat(today, "yyyy-mm-dd");
 
   let sql = sprintf("SELECT `email` FROM `%s` WHERE BINARY `email` = ?;", dbTblName.users);
   try {
@@ -82,7 +85,7 @@ const signUpProc = async (req, res, next) => {
       return;
     }
     const newRows = [
-      [null, email, hash, username, firstName, lastName, gender, birthday, jobTitle, sector, company, city, phone, 0, 0],
+      [null, email, hash, username, firstName, lastName, gender, birthday, jobTitle, sector, company, city, phone, 0, 0, date, date],
     ];
     sql = sprintf("INSERT INTO `%s` VALUES ?;", dbTblName.users);
     await db.query(sql, [newRows]);
