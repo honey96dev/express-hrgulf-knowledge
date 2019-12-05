@@ -190,7 +190,7 @@ const savePackageProc = async (req, res, next) => {
   const timestamp = today.getTime();
 
   const newRows = [
-    [id || null, timestamp, name, startDate, endDate, ""],
+    [id || null, timestamp, name, startDate, endDate, "", ""],
   ];
   let sql = sprintf("INSERT INTO `%s` VALUES ? ON DUPLICATE KEY UPDATE `name` = VALUES(`name`), `startDate` = VALUES(`startDate`), `endDate` = VALUES(`endDate`);", dbTblName.votePackages);
   try {
