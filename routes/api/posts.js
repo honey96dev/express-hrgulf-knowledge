@@ -122,7 +122,7 @@ const saveProc = async (req, res, next) => {
   mkdirp(fileDir, () => {
     file.on("end", async e => {
       const newRows = [
-        [id || null, timestamp, userId, date, time, title, description, media, ""],
+        [id || null, timestamp, userId, date, time, title, description, media, "", ""],
       ];
       let sql;
       let rows;
