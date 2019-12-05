@@ -83,7 +83,7 @@ const saveProc = async (req, res, next) => {
 
   if (!!id && (!file || file === "null")) {
     const newRows = [
-      [id || null, 0, userId, "", "", title, description, "", ""],
+      [id || null, 0, userId, "", "", title, description, "", "", ""],
     ];
     let sql = sprintf("INSERT INTO `%s` VALUES ? ON DUPLICATE KEY UPDATE `title` = VALUES(`title`), `description` = VALUES(`description`);", dbTblName.posts);
     try {
