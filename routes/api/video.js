@@ -12,7 +12,7 @@ const _loadData = async (req, res, next) => {
   const langs = strings[lang];
   let {page, pageSize, userId} = req.body;
   page || (page = 1);
-  pageSize || (pageSize = consts.defaultPageSize);
+  pageSize || (pageSize = consts.defaultPageSize2);
 
   const start = pageSize * (page - 1);
 

@@ -22,10 +22,20 @@ const listProc = async (req, res, next) => {
   const today = new Date();
   const date = dateformat(today, "yyyy-mm-dd");
 
-  let sql = sprintf("SELECT P.*, U.firstName, U.lastName, IFNULL(C.comments, 0) `comments` FROM `%s` P JOIN `%s` U ON U.id = P.userId LEFT JOIN `%s` C ON C.postId = P.id WHERE P.deletedDate = ? AND P.userId LIKE ? AND P.allowedDate BETWEEN '0000-00-00' AND ? ORDER BY P.timestamp DESC LIMIT ?, ?;", dbTblName.posts, dbTblName.users, dbTblName.comments_count);
+  let sql;
+  if (!!userId) {
+    sql = sprintf("SELECT P.*, U.firstName, U.lastName, IFNULL(C.comments, 0) `comments` FROM `%s` P JOIN `%s` U ON U.id = P.userId LEFT JOIN `%s` C ON C.postId = P.id WHERE P.deletedDate = ? AND P.userId LIKE ? ORDER BY P.timestamp DESC LIMIT ?, ?;", dbTblName.posts, dbTblName.users, dbTblName.comments_count);
+  } else {
+    sql = sprintf("SELECT P.*, U.firstName, U.lastName, IFNULL(C.comments, 0) `comments` FROM `%s` P JOIN `%s` U ON U.id = P.userId LEFT JOIN `%s` C ON C.postId = P.id WHERE P.deletedDate = ? AND P.allowedDate BETWEEN '0000-00-00' AND ? ORDER BY P.timestamp DESC LIMIT ?, ?;", dbTblName.posts, dbTblName.users, dbTblName.comments_count);
+  }
 
   try {
-    let rows = await db.query(sql, ["", userId || "%%", date, start, pageSize]);
+    let rows;
+    if (!!userId) {
+      rows = await db.query(sql, ["", userId, start, pageSize]);
+    } else {
+      rows = await db.query(sql, ["", date, start, pageSize]);
+    }
     sql = sprintf("SELECT COUNT(`id`) `count` FROM `%s` WHERE `deletedDate` = ? AND `userId` LIKE ? AND `allowedDate` BETWEEN '0000-00-00' AND ?;", dbTblName.posts, "", userId || "%%");
     let count = await db.query(sql, ["", userId || "%%", date]);
     let pageCount = 0;
