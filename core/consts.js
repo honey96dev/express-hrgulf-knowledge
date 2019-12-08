@@ -11,6 +11,9 @@ export const defaultLanguage = 'en';
 
 export const current = "current";
 
+export const male = "M";
+export const female = "F";
+
 export default {
   uploadPath,
   success,
@@ -20,4 +23,6 @@ export default {
   defaultPageSize2,
   defaultLanguage,
   current,
+  male,
+  female,
 }

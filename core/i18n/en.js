@@ -10,7 +10,8 @@ export default {
   emailIsNotRegistered: "Email is not registered.",
   usernameIsIncorrect: "Username is incorrect",
   passwordIsIncorrect: "Password is incorrect",
-  yourAccountIsNotAllowed: "Your account is not allowed. Please contact admin.",
+  yourAccountIsNotAllowed: "Your account is not allowed. Please contact Customer Support.",
+  yourAccountIsClosed: "Your account is closed. Please contact Customer Support.",
   successfullySignedIn: "Successfully signed in",
   successfullySignedOut: "Successfully signed out",
   error404: "Not Fount",
@@ -35,4 +36,6 @@ export default {
   invalidHash: "Your signature is invalid.",
   invalidUser: "Your information is invalid.",
   notRegistered: "You are not registered.",
+  male: "Male",
+  female: "Female",
 };

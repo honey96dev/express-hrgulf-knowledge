@@ -475,6 +475,44 @@ const publishProc = async (req, res, next) => {
   }
 };
 
+const countProc = async (req, res, next) => {
+  const lang = req.get(consts.lang) || consts.defaultLanguage;
+  const langs = strings[lang];
+
+  const today = new Date();
+  const date = dateformat(today, "yyyy-mm-dd");
+
+  let sql = sprintf("SELECT (SELECT COUNT(`id`) FROM `%s` WHERE `deletedDate` = ?) `count`, (SELECT COUNT(`id`) FROM `%s` WHERE `deletedDate` = ? AND `releasedDate` = ? AND `endDate` > ?) `countAwaiting`;", dbTblName.votePackages, dbTblName.votePackages);
+
+  try {
+    let rows = await db.query(sql, ["", "", "", date]);
+    if (rows.length === 0) {
+      res.status(200).send({
+        result: langs.error,
+        message: langs.unknownServerError,
+      });
+      return;
+    }
+
+    const row = rows[0];
+    res.status(200).send({
+      result: langs.success,
+      data: {
+        count: row.count,
+        countAwaiting: row.countAwaiting,
+      }
+    });
+  } catch (err) {
+    tracer.error(JSON.stringify(err));
+    tracer.error(__filename);
+    res.status(200).send({
+      result: langs.error,
+      message: langs.unknownServerError,
+      err,
+    });
+  }
+};
+
 const router = express.Router();
 
 router.post("/packages", packagesProc);
@@ -491,5 +529,6 @@ router.post("/delete-answer", deleteAnswerProc);
 router.post("/get-answer", getAnswerProc);
 router.post("/result", resultProc);
 router.post("/publish", publishProc);
+router.post("/count", countProc);
 
 export default router;

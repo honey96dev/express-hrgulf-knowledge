@@ -10,7 +10,8 @@ export default {
   emailIsNotRegistered: "البريد الإلكتروني غير مسجل",
   usernameIsIncorrect: "اسم المستخدم غير صحيح",
   passwordIsIncorrect: "كلمة المرور غير صحيحة",
-  yourAccountIsNotAllowed: "حسابك غير مسموح به. يرجى الاتصال المشرف.",
+  yourAccountIsNotAllowed: "حسابك غير مسموح به. يرجى الاتصال بدعم العملاء.",
+  yourAccountIsClosed: "حسابك مغلق. يرجى الاتصال بدعم العملاء.",
   successfullySignedIn: "تم تسجيل الدخول بنجاح",
   successfullySignedOut: "تم تسجيل الخروج بنجاح",
   error404: "لم يتم العثور على",
@@ -35,4 +36,6 @@ export default {
   invalidHash: "توقيعك غير صالح.",
   invalidUser: "معلوماتك غير صالحة.",
   notRegistered: "انت لم تسجل.",
+  male: "الذكر",
+  female: "إناثا",
 };

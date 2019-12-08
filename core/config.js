@@ -30,6 +30,7 @@ const session = {
 };
 const dbTblName = {
   users: "users",
+  usersSigninHistory: "users_signin_history",
   admins: "admins",
   posts: "posts",
   comments: "comments",

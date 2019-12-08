@@ -132,11 +132,46 @@ const getProc = async (req, res, next) => {
   }
 };
 
+const countProc = async (req, res, next) => {
+  const lang = req.get(consts.lang) || consts.defaultLanguage;
+  const langs = strings[lang];
+
+  let sql = sprintf("SELECT COUNT(`id`) `count` FROM `%s` WHERE `deletedDate` = ?;", dbTblName.video);
+
+  try {
+    let rows = await db.query(sql, [""]);
+    if (rows.length === 0) {
+      res.status(200).send({
+        result: langs.error,
+        message: langs.unknownServerError,
+      });
+      return;
+    }
+
+    const row = rows[0];
+    res.status(200).send({
+      result: langs.success,
+      data: {
+        count: row.count,
+      }
+    });
+  } catch (err) {
+    tracer.error(JSON.stringify(err));
+    tracer.error(__filename);
+    res.status(200).send({
+      result: langs.error,
+      message: langs.unknownServerError,
+      err,
+    });
+  }
+};
+
 const router = express.Router();
 
 router.post("/list", listProc);
 router.post("/save", saveProc);
 router.post("/delete", deleteProc);
 router.post("/get", getProc);
+router.post("/count", countProc);
 
 export default router;

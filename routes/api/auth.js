@@ -38,6 +38,23 @@ const signInProc = async (req, res, next) => {
     }
 
     const user = rows[0];
+
+    if (user.deletedDate.length > 0) {
+      res.status(200).send({
+        result: langs.error,
+        message: langs.yourAccountIsClosed,
+      });
+      return;
+    }
+
+    if (user.allowedDate.length === 0) {
+      res.status(200).send({
+        result: langs.error,
+        message: langs.yourAccountIsNotAllowed,
+      });
+      return;
+    }
+
     const token = jwt.sign(
       {
         id: user["id"],
@@ -47,6 +64,18 @@ const signInProc = async (req, res, next) => {
       },
       session.secret
     );
+
+    const today = new Date();
+    const date = dateformat(today, "yyyy-mm-dd");
+    const time = dateformat(today, "hh:MM TT");
+    const timestamp = today.getTime();
+    const remoteAddress = req.header["x-forwarded-for"] || req.connection.remoteAddress;
+    const newRows = [
+      [null, user.id, timestamp, date, time, remoteAddress]
+    ];
+    sql = sprintf("INSERT INTO `%s` VALUES ?;", dbTblName.usersSigninHistory);
+    await db.query(sql, [newRows]);
+
     res.status(200).send({
       result: langs.success,
       message: langs.successfullySignedIn,
@@ -85,7 +114,7 @@ const signUpProc = async (req, res, next) => {
       return;
     }
     const newRows = [
-      [null, email, hash, username, firstName, lastName, gender, birthday, jobTitle, sector, company, city, phone, 0, 0, date, date],
+      [null, email, hash, username, firstName, lastName, gender, birthday, jobTitle, sector, company, city, phone, 0, 0, date, date, "", ""],
     ];
     sql = sprintf("INSERT INTO `%s` VALUES ?;", dbTblName.users);
     await db.query(sql, [newRows]);
