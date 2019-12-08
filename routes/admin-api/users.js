@@ -106,6 +106,33 @@ const deleteProc = async (req, res, next) => {
   }
 };
 
+const saveProc = async (req, res, next) => {
+  const lang = req.get(consts.lang) || consts.defaultLanguage;
+  const langs = strings[lang];
+  const {id, email, username, firstName, lastName, gender, birthday, jobTitle, sector, company, city, phone} = req.body;
+
+  const today = new Date();
+  const date = dateformat(today, "yyyy-mm-dd");
+
+  let sql = sprintf("UPDATE `%s` SET `email` = ?, `username` = ?, `firstName` = ?, `lastName` = ?, `gender` = ?, `birthday` = ?, `jobTitle` = ?, `sector` = ?, `company` = ?, `city` = ?, `phone` = ?, `modifiedDate` = ? WHERE `id` = ?;", dbTblName.users);
+  try {
+    await db.query(sql, [email, username, firstName, lastName, gender, birthday, jobTitle, sector, company, city, phone, date, id]);
+
+    res.status(200).send({
+      result: langs.success,
+      message: langs.successfullySaved,
+    });
+  } catch (err) {
+    tracer.error(JSON.stringify(err));
+    tracer.error(__filename);
+    res.status(200).send({
+      result: langs.error,
+      message: langs.unknownServerError,
+      err,
+    });
+  }
+};
+
 const getProc = async (req, res, next) => {
   const lang = req.get(consts.lang) || consts.defaultLanguage;
   const langs = strings[lang];
@@ -238,6 +265,7 @@ router.post("/list", listProc);
 router.post("/allow", allowProc);
 router.post("/delete", deleteProc);
 router.post("/get", getProc);
+router.post("/save", saveProc);
 router.post("/count", countProc);
 router.post("/sign-in-history", signInHistoryProc);
 router.post("/count-per-gender", countPerGenderProc);
