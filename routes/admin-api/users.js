@@ -170,10 +170,10 @@ const countProc = async (req, res, next) => {
   const lang = req.get(consts.lang) || consts.defaultLanguage;
   const langs = strings[lang];
 
-  let sql = sprintf("SELECT (SELECT COUNT(`id`) FROM `%s`) `count`, (SELECT COUNT(`id`) FROM `%s` WHERE `allowed` = ?) `countAwaiting`;", dbTblName.users, dbTblName.users);
+  let sql = sprintf("SELECT (SELECT COUNT(`id`) FROM `%s` WHERE `deletedDate` = ?) `count`, (SELECT COUNT(`id`) FROM `%s` WHERE `allowedDate` = ? AND `deletedDate` = ?) `countAwaiting`;", dbTblName.users, dbTblName.users);
 
   try {
-    let rows = await db.query(sql, [0]);
+    let rows = await db.query(sql, ["", "", ""]);
     if (rows.length === 0) {
       res.status(200).send({
         result: langs.error,
