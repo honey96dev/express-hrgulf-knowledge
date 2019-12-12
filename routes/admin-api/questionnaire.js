@@ -19,7 +19,7 @@ const _loadPackages = async (req, res, next) => {
   const today = new Date();
   const date = dateformat(today, "yyyy-mm-dd");
 
-  let sql = sprintf("SELECT P.* FROM `%s` P WHERE P.deletedDate = ? ORDER BY P.timestamp DESC LIMIT ?, ?;", dbTblName.votePackages);
+  let sql = sprintf("SELECT P.* FROM `%s` P WHERE P.deletedDate = ? ORDER BY P.timestamp DESC LIMIT ?, ?;", dbTblName.questionnairePackages);
 
   try {
     let rows = await db.query(sql, ["", start, pageSize]);
@@ -28,7 +28,7 @@ const _loadPackages = async (req, res, next) => {
       row['number'] = number++;
       row["ended"] = row["endDate"] < date;
     }
-    sql = sprintf("SELECT COUNT(`id`) `count` FROM `%s` WHERE `deletedDate` = ?;", dbTblName.votePackages);
+    sql = sprintf("SELECT COUNT(`id`) `count` FROM `%s` WHERE `deletedDate` = ?;", dbTblName.questionnairePackages);
     let count = await db.query(sql, [""]);
     let pageCount = 0;
     count.length > 0 && (pageCount = Math.ceil(count[0]['count'] / pageSize));
@@ -58,7 +58,7 @@ const _loadQuestions = async (req, res, next) => {
 
   const start = pageSize * (page - 1);
 
-  let sql = sprintf("SELECT P.* FROM `%s` P WHERE P.packageId = ? AND P.deletedDate = ? ORDER BY P.timestamp ASC LIMIT ?, ?;", dbTblName.voteQuestions);
+  let sql = sprintf("SELECT P.* FROM `%s` P WHERE P.packageId = ? AND P.deletedDate = ? ORDER BY P.timestamp ASC LIMIT ?, ?;", dbTblName.questionnaireQuestions);
 
   try {
     let rows = await db.query(sql, [packageId, "", start, pageSize]);
@@ -66,7 +66,7 @@ const _loadQuestions = async (req, res, next) => {
     for (let row of rows) {
       row['number'] = number++;
     }
-    sql = sprintf("SELECT COUNT(`id`) `count` FROM `%s` WHERE `packageId` = ? AND `deletedDate` = ?;", dbTblName.voteQuestions);
+    sql = sprintf("SELECT COUNT(`id`) `count` FROM `%s` WHERE `packageId` = ? AND `deletedDate` = ?;", dbTblName.questionnaireQuestions);
     let count = await db.query(sql, [packageId, ""]);
     let pageCount = 0;
     count.length > 0 && (pageCount = Math.ceil(count[0]['count'] / pageSize));
@@ -96,7 +96,7 @@ const _loadAnswers = async (req, res, next) => {
 
   const start = pageSize * (page - 1);
 
-  let sql = sprintf("SELECT P.* FROM `%s` P WHERE P.questionId = ? AND P.deletedDate = ? ORDER BY P.timestamp ASC LIMIT ?, ?;", dbTblName.voteAnswers);
+  let sql = sprintf("SELECT P.* FROM `%s` P WHERE P.questionId = ? AND P.deletedDate = ? ORDER BY P.timestamp ASC LIMIT ?, ?;", dbTblName.questionnaireAnswers);
 
   try {
     let rows = await db.query(sql, [questionId, "", start, pageSize]);
@@ -104,7 +104,7 @@ const _loadAnswers = async (req, res, next) => {
     for (let row of rows) {
       row['number'] = number++;
     }
-    sql = sprintf("SELECT COUNT(`id`) `count` FROM `%s` WHERE `questionId` = ? AND `deletedDate` = ?;", dbTblName.voteAnswers);
+    sql = sprintf("SELECT COUNT(`id`) `count` FROM `%s` WHERE `questionId` = ? AND `deletedDate` = ?;", dbTblName.questionnaireAnswers);
     let count = await db.query(sql, [questionId, ""]);
     let pageCount = 0;
     count.length > 0 && (pageCount = Math.ceil(count[0]['count'] / pageSize));
@@ -135,13 +135,13 @@ const _loadResult = async (req, res, next) => {
 
   const today = new Date();
   const date = dateformat(today, "yyyy-mm-dd");
-  let sql = sprintf("SELECT * FROM `%s` WHERE `packageId` = ? AND `deletedDate` = ? ORDER BY `timestamp` ASC LIMIT ?, ?;", dbTblName.voteQuestions);
+  let sql = sprintf("SELECT Q.*, C.count `answersCount` FROM `%s` Q LEFT JOIN `%s` C ON C.questionId = Q.id WHERE Q.packageId = ? AND Q.deletedDate = ? ORDER BY Q.timestamp ASC LIMIT ?, ?;", dbTblName.questionnaireQuestions, dbTblName.questionnaireAnsweredCount);
 
   try {
     let rows = await db.query(sql, [packageId, "", start, pageSize]);
     let rows1;
 
-    sql = sprintf("SELECT COUNT(`id`) `count` FROM `%s` WHERE `packageId` = ? AND `deletedDate` = ?;", dbTblName.voteQuestions);
+    sql = sprintf("SELECT COUNT(`id`) `count` FROM `%s` WHERE `packageId` = ? AND `deletedDate` = ?;", dbTblName.questionnaireQuestions);
     let count = await db.query(sql, [packageId, ""]);
     let pageCount = 0;
     count.length > 0 && (pageCount = Math.ceil(count[0]["count"] / pageSize));
@@ -151,14 +151,10 @@ const _loadResult = async (req, res, next) => {
       row["index"] = index++;
       row["isEnded"] = row["endDate"] < date;
 
-      sql = sprintf("SELECT A.id, A.answer, IFNULL(C.count, 0) `count` FROM `%s` A LEFT JOIN `%s` C ON C.answerId = A.id WHERE A.questionId = ?;", dbTblName.voteAnswers, dbTblName.voteResultCount);
+      sql = sprintf("SELECT A.id, A.answer, IFNULL(C.count, 0) `count` FROM `%s` A LEFT JOIN `%s` C ON C.answerId = A.id WHERE A.questionId = ?;", dbTblName.questionnaireAnswers, dbTblName.questionnaireResultCount);
       row["answers"] = await db.query(sql, [row.id]);
-      row["answersCount"] = 0;
-      for (let item of row["answers"]) {
-        row["answersCount"] += item.count;
-      }
 
-      sql = sprintf("SELECT COUNT(`questionId`) `count` FROM `%s` WHERE `questionId` = ? AND `userId` = ?;", dbTblName.voteResult);
+      sql = sprintf("SELECT COUNT(`questionId`) `count` FROM `%s` WHERE `questionId` = ? AND `userId` = ?;", dbTblName.questionnaireResult);
       rows1 = await db.query(sql, [row.id, userId]);
       row["answered"] = !!rows1[0]["count"];
     }
@@ -196,7 +192,7 @@ const savePackageProc = async (req, res, next) => {
   const newRows = [
     [id || null, timestamp, name, startDate, endDate, "" , ""],
   ];
-  let sql = sprintf("INSERT INTO `%s` VALUES ? ON DUPLICATE KEY UPDATE `name` = VALUES(`name`), `startDate` = VALUES(`startDate`), `endDate` = VALUES(`endDate`);", dbTblName.votePackages);
+  let sql = sprintf("INSERT INTO `%s` VALUES ? ON DUPLICATE KEY UPDATE `name` = VALUES(`name`), `startDate` = VALUES(`startDate`), `endDate` = VALUES(`endDate`);", dbTblName.questionnairePackages);
   try {
     let rows = await db.query(sql, [newRows]);
     res.status(200).send({
@@ -224,7 +220,7 @@ const deletePackageProc = async (req, res, next) => {
   const today = new Date();
   const date = dateformat(today, "yyyy-mm-dd");
 
-  let sql = sprintf("UPDATE `%s` SET `deletedDate` = ? WHERE `id` = ?;", dbTblName.votePackages);
+  let sql = sprintf("UPDATE `%s` SET `deletedDate` = ? WHERE `id` = ?;", dbTblName.questionnairePackages);
   try {
     await db.query(sql, [date, id]);
     _loadPackages(req, res, next);
@@ -244,7 +240,7 @@ const getPackageProc = async (req, res, next) => {
   const langs = strings[lang];
   const {id} = req.body;
 
-  let sql = sprintf("SELECT P.* FROM `%s` P WHERE P.id = ?;", dbTblName.votePackages);
+  let sql = sprintf("SELECT P.* FROM `%s` P WHERE P.id = ?;", dbTblName.questionnairePackages);
 
   try {
     let rows = await db.query(sql, [id]);
@@ -288,7 +284,7 @@ const saveQuestionProc = async (req, res, next) => {
   const newRows = [
     [id || null, packageId, timestamp, question, "", ""],
   ];
-  let sql = sprintf("INSERT INTO `%s` VALUES ? ON DUPLICATE KEY UPDATE `question` = VALUES(`question`);", dbTblName.voteQuestions);
+  let sql = sprintf("INSERT INTO `%s` VALUES ? ON DUPLICATE KEY UPDATE `question` = VALUES(`question`);", dbTblName.questionnaireQuestions);
   try {
     let rows = await db.query(sql, [newRows]);
     res.status(200).send({
@@ -316,7 +312,7 @@ const deleteQuestionProc = async (req, res, next) => {
   const today = new Date();
   const date = dateformat(today, "yyyy-mm-dd");
 
-  let sql = sprintf("UPDATE `%s` SET `deletedDate` = ? WHERE `id` = ?;", dbTblName.voteQuestions);
+  let sql = sprintf("UPDATE `%s` SET `deletedDate` = ? WHERE `id` = ?;", dbTblName.questionnaireQuestions);
   try {
     await db.query(sql, [date, id]);
     _loadQuestions(req, res, next);
@@ -336,7 +332,7 @@ const getQuestionProc = async (req, res, next) => {
   const langs = strings[lang];
   const {id} = req.body;
 
-  let sql = sprintf("SELECT P.* FROM `%s` P WHERE P.id = ?;", dbTblName.voteQuestions);
+  let sql = sprintf("SELECT P.* FROM `%s` P WHERE P.id = ?;", dbTblName.questionnaireQuestions);
 
   try {
     let rows = await db.query(sql, [id]);
@@ -377,7 +373,7 @@ const saveAnswerProc = async (req, res, next) => {
   const newRows = [
     [id || null, timestamp, questionId, answer, ""],
   ];
-  let sql = sprintf("INSERT INTO `%s` VALUES ? ON DUPLICATE KEY UPDATE `answer` = VALUES(`answer`);", dbTblName.voteAnswers);
+  let sql = sprintf("INSERT INTO `%s` VALUES ? ON DUPLICATE KEY UPDATE `answer` = VALUES(`answer`);", dbTblName.questionnaireAnswers);
   try {
     let rows = await db.query(sql, [newRows]);
     res.status(200).send({
@@ -405,7 +401,7 @@ const deleteAnswerProc = async (req, res, next) => {
   const today = new Date();
   const date = dateformat(today, "yyyy-mm-dd");
 
-  let sql = sprintf("UPDATE `%s` SET `deletedDate` = ? WHERE `id` = ?;", dbTblName.voteAnswers);
+  let sql = sprintf("UPDATE `%s` SET `deletedDate` = ? WHERE `id` = ?;", dbTblName.questionnaireAnswers);
   try {
     await db.query(sql, [date, id]);
     _loadAnswers(req, res, next);
@@ -425,7 +421,7 @@ const getAnswerProc = async (req, res, next) => {
   const langs = strings[lang];
   const {id} = req.body;
 
-  let sql = sprintf("SELECT P.* FROM `%s` P WHERE P.id = ?;", dbTblName.voteAnswers);
+  let sql = sprintf("SELECT P.* FROM `%s` P WHERE P.id = ?;", dbTblName.questionnaireAnswers);
 
   try {
     let rows = await db.query(sql, [id]);
@@ -463,7 +459,7 @@ const publishProc = async (req, res, next) => {
   const today = new Date();
   const date = release ? dateformat(today, "yyyy-mm-dd") : "";
 
-  let sql = sprintf("UPDATE `%s` SET `releasedDate` = ? WHERE `id` = ?;", dbTblName.votePackages);
+  let sql = sprintf("UPDATE `%s` SET `releasedDate` = ? WHERE `id` = ?;", dbTblName.questionnairePackages);
 
   try {
     await db.query(sql, [date, id]);
@@ -486,7 +482,7 @@ const countProc = async (req, res, next) => {
   const today = new Date();
   const date = dateformat(today, "yyyy-mm-dd");
 
-  let sql = sprintf("SELECT (SELECT COUNT(`id`) FROM `%s` WHERE `deletedDate` = ?) `count`, (SELECT COUNT(`id`) FROM `%s` WHERE `deletedDate` = ? AND `releasedDate` = ? AND `endDate` > ?) `countAwaiting`;", dbTblName.votePackages, dbTblName.votePackages);
+  let sql = sprintf("SELECT (SELECT COUNT(`id`) FROM `%s` WHERE `deletedDate` = ?) `count`, (SELECT COUNT(`id`) FROM `%s` WHERE `deletedDate` = ? AND `releasedDate` = ? AND `endDate` > ?) `countAwaiting`;", dbTblName.questionnairePackages, dbTblName.questionnairePackages);
 
   try {
     let rows = await db.query(sql, ["", "", "", date]);

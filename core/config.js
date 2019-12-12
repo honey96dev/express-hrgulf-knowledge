@@ -37,12 +37,20 @@ const dbTblName = {
   comments_count: "comments_count",
   news: "news",
   video: "video",
+  questionnairePackages: "questionnaire_packages",
+  questionnaireQuestions: "questionnaire_questions",
+  questionnaireQuestionsCount: "questionnaire_questions_count",
+  questionnaireAnswers: "questionnaire_answers",
+  questionnaireResult: "questionnaire_result",
+  questionnaireResultCount: "questionnaire_result_count",
+  questionnaireAnsweredCount: "questionnaire_answered_count",
   votePackages: "vote_packages",
   voteQuestions: "vote_questions",
   voteQuestionsCount: "vote_questions_count",
   voteAnswers: "vote_answers",
   voteResult: "vote_result",
   voteResultCount: "vote_result_count",
+  contactUs: "contact_us",
 };
 
 export {

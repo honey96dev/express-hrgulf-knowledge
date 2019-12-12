@@ -21,13 +21,23 @@
     "static/js/11.chunk.js": "/static/js/11.chunk.js",
     "static/css/12.chunk.css": "/static/css/12.chunk.css",
     "static/js/12.chunk.js": "/static/js/12.chunk.js",
+    "static/css/13.chunk.css": "/static/css/13.chunk.css",
     "static/js/13.chunk.js": "/static/js/13.chunk.js",
     "static/css/14.chunk.css": "/static/css/14.chunk.css",
     "static/js/14.chunk.js": "/static/js/14.chunk.js",
+    "static/css/15.chunk.css": "/static/css/15.chunk.css",
+    "static/js/15.chunk.js": "/static/js/15.chunk.js",
     "index.html": "/index.html",
-    "precache-manifest.js?30be2b32c086e0e0d2724e9970cdd307": "/precache-manifest.js?30be2b32c086e0e0d2724e9970cdd307",
+    "precache-manifest.js?28ff6554f5741f46f1b6131406002e7c": "/precache-manifest.js?28ff6554f5741f46f1b6131406002e7c",
     "service-worker.js": "/service-worker.js",
     "static/media/mdb.scss": "/static/media/default-skin.svg",
-    "static/media/all.min.css": "/static/media/fa-solid-900.woff2"
+    "static/media/SignUpPage.scss": "/static/media/auth-bg.png",
+    "static/media/all.min.css": "/static/media/fa-solid-900.woff2",
+    "static/media/ghcs-200.png": "/static/media/ghcs-200.png",
+    "static/media/news.png": "/static/media/news.png",
+    "static/media/post.png": "/static/media/post.png",
+    "static/media/questionnaire.png": "/static/media/questionnaire.png",
+    "static/media/video.png": "/static/media/video.png",
+    "static/media/vote.png": "/static/media/vote.png"
   }
 }
