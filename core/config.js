@@ -33,6 +33,8 @@ const dbTblName = {
   usersSigninHistory: "users_signin_history",
   admins: "admins",
   posts: "posts",
+  postTopics: "post_topics",
+  post2Topics: "post2topics",
   comments: "comments",
   comments_count: "comments_count",
   news: "news",

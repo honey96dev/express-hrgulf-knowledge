@@ -11,33 +11,41 @@ import strings from "../../core/strings";
 import tracer from "../../core/tracer";
 import consts from "../../core/consts";
 
-const listProc = async (req, res, next) => {
+const _loadData = async (req, res, next) => {
   const lang = req.get(consts.lang) || consts.defaultLanguage;
   const langs = strings[lang];
-  let {page, pageSize, userId} = req.body;
+  let {page, pageSize, userId, topics} = req.body;
   page || (page = 1);
   pageSize || (pageSize = consts.defaultPageSize);
 
   const start = pageSize * (page - 1);
-  const today = new Date();
-  const date = dateformat(today, "yyyy-mm-dd");
 
   let sql;
-  if (!!userId) {
-    sql = sprintf("SELECT P.*, U.firstName, U.lastName, IFNULL(C.comments, 0) `comments` FROM `%s` P JOIN `%s` U ON U.id = P.userId LEFT JOIN `%s` C ON C.postId = P.id WHERE P.deletedDate = ? AND P.userId LIKE ? ORDER BY P.timestamp DESC LIMIT ?, ?;", dbTblName.posts, dbTblName.users, dbTblName.comments_count);
-  } else {
-    sql = sprintf("SELECT P.*, U.firstName, U.lastName, IFNULL(C.comments, 0) `comments` FROM `%s` P JOIN `%s` U ON U.id = P.userId LEFT JOIN `%s` C ON C.postId = P.id WHERE P.deletedDate = ? AND P.allowedDate BETWEEN '0000-00-00' AND ? ORDER BY P.timestamp DESC LIMIT ?, ?;", dbTblName.posts, dbTblName.users, dbTblName.comments_count);
+  let rows;
+
+  let topicWhere = "";
+  if (!!topics && !!topics.length) {
+    sql = sprintf("SELECT `postId` FROM `%s` WHERE `topicId` IN (?) AND `related` = ?;", dbTblName.post2Topics);
+    rows = await db.query(sql, [topics, 1]);
+
+    let tmp = [];
+    for (let row of rows) {
+      tmp.push(row["postId"]);
+    }
+    if (!!tmp.length) {
+      topicWhere = sprintf("AND P.id IN (%s)", tmp.join(","));
+    } else {
+      topicWhere = sprintf("AND P.id = '0'");
+    }
   }
 
+  sql = sprintf("SELECT P.*, U.firstName, U.lastName, IFNULL(C.comments, 0) `comments` FROM `%s` P JOIN `%s` U ON U.id = P.userId LEFT JOIN `%s` C ON C.postId = P.id WHERE P.deletedDate = ? AND P.userId LIKE ? AND P.allowedDate != ? %s ORDER BY P.timestamp DESC LIMIT ?, ?;", dbTblName.posts, dbTblName.users, dbTblName.comments_count, topicWhere);
+
   try {
-    let rows;
-    if (!!userId) {
-      rows = await db.query(sql, ["", userId, start, pageSize]);
-    } else {
-      rows = await db.query(sql, ["", date, start, pageSize]);
-    }
-    sql = sprintf("SELECT COUNT(`id`) `count` FROM `%s` WHERE `deletedDate` = ? AND `userId` LIKE ? AND `allowedDate` BETWEEN '0000-00-00' AND ?;", dbTblName.posts, "", userId || "%%");
-    let count = await db.query(sql, ["", userId || "%%", date]);
+    rows = await db.query(sql, ["", userId || "%%", "", start, pageSize]);
+    sql = sprintf("SELECT COUNT(P.id) `count` FROM `%s` P WHERE P.deletedDate = ? AND P.userId LIKE ? AND P.allowedDate != ? %s;", dbTblName.posts, topicWhere);
+
+    let count = await db.query(sql, ["", userId || "%%", ""]);
     let pageCount = 0;
     count.length > 0 && (pageCount = Math.ceil(count[0]['count'] / pageSize));
     res.status(200).send({
@@ -55,6 +63,48 @@ const listProc = async (req, res, next) => {
       err,
     });
   }
+};
+
+const _loadTopics = async (req, res, next) => {
+  const lang = req.get(consts.lang) || consts.defaultLanguage;
+  const langs = strings[lang];
+  let {page, pageSize} = req.body;
+  page || (page = 1);
+  pageSize || (pageSize = consts.defaultPageSize);
+
+  let start = pageSize * (page - 1);
+
+  let sql = sprintf("SELECT * FROM `%s` WHERE `deletedDate` = ? ORDER BY `timestamp` ASC LIMIT ?, ?;", dbTblName.postTopics);
+
+  try {
+    let rows = await db.query(sql, ["", start, pageSize]);
+    for (let row of rows) {
+      row["number"] = ++start;
+    }
+
+    sql = sprintf("SELECT COUNT(`id`) `count` FROM `%s` WHERE `deletedDate` = ?;", dbTblName.postTopics);
+    let count = await db.query(sql, [""]);
+    let pageCount = 0;
+    count.length > 0 && (pageCount = Math.ceil(count[0]['count'] / pageSize));
+    res.status(200).send({
+      result: langs.success,
+      count: count[0]['count'],
+      pageCount,
+      data: rows,
+    });
+  } catch (err) {
+    tracer.error(JSON.stringify(err));
+    tracer.error(__filename);
+    res.status(200).send({
+      result: langs.error,
+      message: langs.unknownServerError,
+      err,
+    });
+  }
+};
+
+const listProc = async (req, res, next) => {
+  _loadData(req, res, next);
 };
 
 const latestProc = async (req, res, next) => {
@@ -84,7 +134,7 @@ const latestProc = async (req, res, next) => {
 const saveProc = async (req, res, next) => {
   const lang = req.get(consts.lang) || consts.defaultLanguage;
   const langs = strings[lang];
-  const {id, title, description, file, userId} = req.body;
+  const {id, topicIds, title, description, file, userId} = req.body;
 
   const today = new Date();
   const date = dateformat(today, "yyyy-mm-dd");
@@ -92,12 +142,24 @@ const saveProc = async (req, res, next) => {
   const timestamp = today.getTime();
 
   if (!!id && (!file || file === "null")) {
-    const newRows = [
-      [id || null, 0, userId, "", "", title, description, "", "", ""],
+    let newRows = [
+      [id || null, topicIds, 0, userId, "", "", title, description, "", "", ""],
     ];
-    let sql = sprintf("INSERT INTO `%s` VALUES ? ON DUPLICATE KEY UPDATE `title` = VALUES(`title`), `description` = VALUES(`description`);", dbTblName.posts);
+    let sql = sprintf("INSERT INTO `%s` VALUES ? ON DUPLICATE KEY UPDATE `topicIds` = VALUES(`topicIds`), `title` = VALUES(`title`), `description` = VALUES(`description`);", dbTblName.posts);
     try {
       let rows = await db.query(sql, [newRows]);
+
+      sql = sprintf("UPDATE `%s` SET `related` = ? WHERE `postId` = ?;", dbTblName.post2Topics);
+      await db.query(sql, [0, id || 0]);
+
+      newRows = [];
+      const topicIdsArr = topicIds.split(",");
+      for (let topicId of topicIdsArr) {
+        newRows.push([id, topicId, 1]);
+      }
+      sql = sprintf("INSERT INTO `%s` VALUES ? ON DUPLICATE KEY UPDATE `related` = VALUES(`related`);", dbTblName.post2Topics);
+      await db.query(sql, [newRows]);
+
       res.status(200).send({
         result: langs.success,
         message: langs.successfullySaved,
@@ -131,8 +193,8 @@ const saveProc = async (req, res, next) => {
   const media = sprintf("%s/%s", consts.uploadPath.posts, fileName);
   mkdirp(fileDir, () => {
     file.on("end", async e => {
-      const newRows = [
-        [id || null, timestamp, userId, date, time, title, description, media, "", ""],
+      let newRows = [
+        [id || null, topicIds, timestamp, userId, date, time, title, description, media, "", ""],
       ];
       let sql;
       let rows;
@@ -147,9 +209,21 @@ const saveProc = async (req, res, next) => {
           });
         }
       }
-      sql = sprintf("INSERT INTO `%s` VALUES ? ON DUPLICATE KEY UPDATE `title` = VALUES(`title`), `description` = VALUES(`description`), `media` = VALUES(`media`);", dbTblName.posts);
+      sql = sprintf("INSERT INTO `%s` VALUES ? ON DUPLICATE KEY UPDATE `topicIds` = VALUES(`topicIds`), `title` = VALUES(`title`), `description` = VALUES(`description`), `media` = VALUES(`media`);", dbTblName.posts);
       try {
         rows = await db.query(sql, [newRows]);
+
+        sql = sprintf("UPDATE `%s` SET `related` = ? WHERE `postId` = ?;", dbTblName.post2Topics);
+        await db.query(sql, [0, id || 0]);
+
+        newRows = [];
+        const topicIdsArr = topicIds.split(",");
+        for (let topicId of topicIdsArr) {
+          newRows.push([id || rows.insertId, topicId, 1]);
+        }
+        sql = sprintf("INSERT INTO `%s` VALUES ? ON DUPLICATE KEY UPDATE `related` = VALUES(`related`);", dbTblName.post2Topics);
+        await db.query(sql, [newRows]);
+
         res.status(200).send({
           result: langs.success,
           message: langs.successfullySaved,
@@ -188,9 +262,15 @@ const getProc = async (req, res, next) => {
   try {
     let rows = await db.query(sql, [userId || 0, id]);
     if (rows.length > 0) {
+      let row = rows[0];
+      // const topicIds = row["topicIds"].split(",");
+      // tracer.info("topicIds", row["topicIds"], topicIds);
+      // sql = sprintf("SELECT * FROM `%s` WHERE `id` IN (?);", dbTblName.postTopics);
+      // row["topics"] = !!topicIds.length ? await db.query(sql, [topicIds]) : [];
+
       res.status(200).send({
         result: langs.success,
-        data: rows[0],
+        data: row,
       });
     } else {
       res.status(200).send({
@@ -266,6 +346,35 @@ const writeComment = async (req, res, next) => {
   }
 };
 
+const post2TopicsProc = async (req, res, next) => {
+  const lang = req.get(consts.lang) || consts.defaultLanguage;
+  const langs = strings[lang];
+  const {postId} = req.body;
+
+  let sql = sprintf("SELECT T.* FROM `%s` M JOIN `%s` T ON T.id = M.topicId WHERE M.postId = ?", dbTblName.post2Topics, dbTblName.postTopics);
+
+  try {
+    let rows = await db.query(sql, [postId]);
+    res.status(200).send({
+      result: langs.success,
+      message: langs.successfullySaved,
+      data: rows,
+    });
+  } catch (err) {
+    tracer.error(JSON.stringify(err));
+    tracer.error(__filename);
+    res.status(200).send({
+      result: langs.error,
+      message: langs.unknownServerError,
+      err,
+    });
+  }
+};
+
+const topicsProc = async (req, res, next) => {
+  await _loadTopics(req, res, next);
+};
+
 const router = express.Router();
 
 router.post("/list", listProc);
@@ -274,5 +383,7 @@ router.post("/save", saveProc);
 router.post("/get", getProc);
 router.post("/comment-list", commentList);
 router.post("/write-comment", writeComment);
+router.post("/post2topics", post2TopicsProc);
+router.post("/topics", topicsProc);
 
 export default router;
