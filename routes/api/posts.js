@@ -112,10 +112,10 @@ const latestProc = async (req, res, next) => {
   const langs = strings[lang];
   let {limit} = req.body;
 
-  let sql = sprintf("SELECT P.*, U.firstName, U.lastName, IFNULL(C.comments, 0) `comments` FROM `%s` P JOIN `%s` U ON U.id = P.userId LEFT JOIN `%s` C ON C.postId = P.id WHERE P.deletedDate = ? ORDER BY P.timestamp DESC LIMIT ?, ?;", dbTblName.posts, dbTblName.users, dbTblName.comments_count);
+  let sql = sprintf("SELECT P.*, U.firstName, U.lastName, IFNULL(C.comments, 0) `comments` FROM `%s` P JOIN `%s` U ON U.id = P.userId LEFT JOIN `%s` C ON C.postId = P.id WHERE P.deletedDate = ? AND P.allowedDate = ? ORDER BY P.timestamp DESC LIMIT ?, ?;", dbTblName.posts, dbTblName.users, dbTblName.comments_count);
 
   try {
-    let rows = await db.query(sql, ["", 0, limit]);
+    let rows = await db.query(sql, ["", "", 0, limit]);
     res.status(200).send({
       result: langs.success,
       data: rows,
