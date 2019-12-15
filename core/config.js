@@ -53,6 +53,9 @@ const dbTblName = {
   voteResult: "vote_result",
   voteResultCount: "vote_result_count",
   contactUs: "contact_us",
+
+  eliteResourcesDb: "portal3sections",
+  consultants: "director_board",
 };
 
 export {

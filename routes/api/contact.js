@@ -39,8 +39,37 @@ const usProc = async (req, res, next) => {
   }
 };
 
+const consultantsProc = async (req, res, next) => {
+  const lang = req.get(consts.lang) || consts.defaultLanguage;
+  const langs = strings[lang];
+
+  let sql = sprintf("SELECT * FROM `%s`.`%s` ;", dbTblName.eliteResourcesDb, dbTblName.consultants);
+
+  try {
+    let rows = await db.query(sql);
+
+    for (let row of rows) {
+      row["media"] = `${consts.eliteResourcesUrl}/assets${row["media"]}`;
+    }
+
+    res.status(200).send({
+      result: langs.success,
+      data: rows,
+    });
+  } catch (err) {
+    tracer.error(JSON.stringify(err));
+    tracer.error(__filename);
+    res.status(200).send({
+      result: langs.error,
+      message: langs.unknownServerError,
+      err,
+    });
+  }
+};
+
 const router = express.Router();
 
 router.post("/us", usProc);
+router.post("/consultants", consultantsProc);
 
 export default router;
