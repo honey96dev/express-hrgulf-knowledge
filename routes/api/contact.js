@@ -1,6 +1,7 @@
 import express from "express";
 import {sprintf} from "sprintf-js";
 import dateformat from "dateformat";
+import request from "request";
 import {dbTblName} from "../../core/config";
 import db from "../../core/db";
 import strings from "../../core/strings";
@@ -42,29 +43,55 @@ const usProc = async (req, res, next) => {
 const consultantsProc = async (req, res, next) => {
   const lang = req.get(consts.lang) || consts.defaultLanguage;
   const langs = strings[lang];
+  //
+  // let sql = sprintf("SELECT * FROM `%s`.`%s` ;", dbTblName.eliteResourcesDb, dbTblName.consultants);
+  //
+  // try {
+  //   let rows = await db.query(sql);
+  //
+  //   for (let row of rows) {
+  //     row["media"] = `${consts.eliteResourcesUrl}/assets${row["media"]}`;
+  //   }
+  //
+  //   res.status(200).send({
+  //     result: langs.success,
+  //     data: rows,
+  //   });
+  // } catch (err) {
+  //   tracer.error(JSON.stringify(err));
+  //   tracer.error(__filename);
+  //   res.status(200).send({
+  //     result: langs.error,
+  //     message: langs.unknownServerError,
+  //     err,
+  //   });
+  // }
 
-  let sql = sprintf("SELECT * FROM `%s`.`%s` ;", dbTblName.eliteResourcesDb, dbTblName.consultants);
+  const headers = {
+    "content-type" : "application/json",
+    "Accept": "application/json",
+    "X-Requested-With": "XMLHttpRequest",
+    "language": lang,
+  };
 
-  try {
-    let rows = await db.query(sql);
+  const requestOptions = {
+    headers: headers,
+    method: "POST",
+    url: "https://eliteresources.co/api/director-board/list",
+  };
 
-    for (let row of rows) {
-      row["media"] = `${consts.eliteResourcesUrl}/assets${row["media"]}`;
+  request(requestOptions, (err, response, body) => {
+    if (!!err) {
+      tracer.error(JSON.stringify(err));
+      tracer.error(__filename);
+      res.status(200).send({
+        result: langs.error,
+        message: langs.unknownServerError,
+      });
+    } else {
+      res.status(200).send(body);
     }
-
-    res.status(200).send({
-      result: langs.success,
-      data: rows,
-    });
-  } catch (err) {
-    tracer.error(JSON.stringify(err));
-    tracer.error(__filename);
-    res.status(200).send({
-      result: langs.error,
-      message: langs.unknownServerError,
-      err,
-    });
-  }
+  });
 };
 
 const router = express.Router();
