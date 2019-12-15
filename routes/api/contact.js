@@ -89,7 +89,14 @@ const consultantsProc = async (req, res, next) => {
         message: langs.unknownServerError,
       });
     } else {
-      res.status(200).send(body);
+      const rows = JSON.parse(body).data;
+      for (let row of rows) {
+        row["media"] = `${consts.eliteResourcesUrl}/assets${row["media"]}`;
+      }
+      res.status(200).send({
+        result: langs.success,
+        data: rows,
+      });
     }
   });
 };

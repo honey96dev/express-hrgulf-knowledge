@@ -14,7 +14,7 @@ export const current = "current";
 export const male = "M";
 export const female = "F";
 
-export const eliteResourcesUrl = process.env.NODE_ENV === "production" ? "https://eliteresources.co" : "http://localhost:8080";
+export const eliteResourcesUrl = "https://eliteresources.co";
 
 export default {
   uploadPath,
