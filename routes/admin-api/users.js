@@ -10,31 +10,33 @@ import consts from "../../core/consts";
 const _loadData = async (req, res, next) => {
   const lang = req.get(consts.lang) || consts.defaultLanguage;
   const langs = strings[lang];
-  let {page, pageSize, userId, scope} = req.body;
+  let {page, pageSize, userId, scope, search} = req.body;
   page || (page = 1);
   pageSize || (pageSize = consts.defaultPageSize);
 
   const start = pageSize * (page - 1);
+
+  search = `%${search}%`;
 
   let allowedWhere = "";
   if (scope === "new") {
     allowedWhere = "AND `allowedDate` = ''";
   }
 
-  let sql = sprintf("SELECT * FROM `%s` WHERE `deletedDate` = ? %s ORDER BY `createdDate` DESC LIMIT ?, ?;", dbTblName.users, allowedWhere);
+  let sql = sprintf("SELECT * FROM `%s` WHERE `deletedDate` = ? AND (`email` LIKE ? OR `username` LIKE ? AND `firstName` LIKE ? AND `lastName` LIKE ? AND `jobTitle` LIKE ? AND `sector` LIKE ? AND `company` LIKE ? AND `city` LIKE ? AND `phone` LIKE ?) %s ORDER BY `createdDate` DESC LIMIT ?, ?;", dbTblName.users, allowedWhere);
   // let sql = sprintf("SELECT * FROM `%s` WHERE `deletedDate` = ? %s ORDER BY LENGTH(`allowedDate`) ASC, `createdDate` DESC LIMIT ?, ?;", dbTblName.users, allowedWhere);
 
   try {
-    let rows = await db.query(sql, ["", start, pageSize]);
+    let rows = await db.query(sql, ["", search, search, search, search, search, search, search, search, search, start, pageSize]);
     let number = start + 1;
     for (let row of rows) {
       row["number"] = number++;
       row["gender"] = row["gender"] === consts.male ? langs.male : langs.female;
     }
 
-    sql = sprintf("SELECT COUNT(`id`) `count` FROM `%s` WHERE `deletedDate` = ? %s;", dbTblName.users, allowedWhere);
+    sql = sprintf("SELECT COUNT(`id`) `count` FROM `%s` WHERE `deletedDate` = ? AND (`email` LIKE ? OR `username` LIKE ? AND `firstName` LIKE ? AND `lastName` LIKE ? AND `jobTitle` LIKE ? AND `sector` LIKE ? AND `company` LIKE ? AND `city` LIKE ? AND `phone` LIKE ?) %s;", dbTblName.users, allowedWhere);
 
-    let count = await db.query(sql, ["", userId || "%%"]);
+    let count = await db.query(sql, ["", search, search, search, search, search, search, search, search, search]);
     let pageCount = 0;
     count.length > 0 && (pageCount = Math.ceil(count[0]['count'] / pageSize));
     res.status(200).send({
