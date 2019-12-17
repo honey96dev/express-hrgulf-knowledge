@@ -14,7 +14,7 @@ const signInProc = async (req, res, next) => {
   const langs = strings[lang];
   const {email, password} = req.body;
 
-  let sql = sprintf("SELECT `email` FROM `%s` WHERE BINARY `email` = ?;", dbTblName.users);
+  let sql = sprintf("SELECT `email` FROM `%s` WHERE `email` = ?;", dbTblName.users);
   try {
     let rows = await db.query(sql, [email]);
     if (rows.length === 0) {
@@ -26,7 +26,7 @@ const signInProc = async (req, res, next) => {
     }
 
     const hash = myCrypto.hmacHex(password);
-    sql = sprintf("SELECT U.* FROM `%s` U WHERE BINARY U.email = ? AND BINARY U.hash = ?;", dbTblName.users);
+    sql = sprintf("SELECT U.* FROM `%s` U WHERE U.email = ? AND BINARY U.hash = ?;", dbTblName.users);
     rows = await db.query(sql, [email, hash]);
 
     if (rows.length === 0) {
@@ -103,7 +103,7 @@ const signUpProc = async (req, res, next) => {
   const today = new Date();
   const date = dateformat(today, "yyyy-mm-dd");
 
-  let sql = sprintf("SELECT `email` FROM `%s` WHERE BINARY `email` = ?;", dbTblName.users);
+  let sql = sprintf("SELECT `email` FROM `%s` WHERE `email` = ?;", dbTblName.users);
   try {
     let rows = await db.query(sql, [email]);
     if (rows.length > 0) {
