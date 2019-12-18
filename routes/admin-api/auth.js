@@ -43,7 +43,10 @@ const signInProc = async (req, res, next) => {
         email: user["email"],
         username: user["username"],
       },
-      session.secretAdmin
+      session.secretAdmin,
+      {
+        // expiresIn: '5m',
+      },
     );
     res.status(200).send({
       result: langs.success,
