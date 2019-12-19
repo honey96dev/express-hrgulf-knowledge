@@ -1,6 +1,7 @@
 import express from "express";
 import {sprintf} from "sprintf-js";
 import jwt from "jsonwebtoken";
+import dateformat from "dateformat";
 import {dbTblName, session} from "../../core/config";
 import db from "../../core/db";
 import strings from "../../core/strings";
@@ -13,8 +14,11 @@ const saveProc = async (req, res, next) => {
   const langs = strings[lang];
   let {id, email, username, firstName, lastName, gender, birthday, jobTitle, sector, company, city, phone} = req.body;
 
+  const today = new Date();
+  const date = dateformat(today, "yyyy-mm-dd");
+
   const newRows = [
-    [id, email, "", username, firstName, lastName, gender, birthday, jobTitle, sector, company, city, phone, 0, 0],
+    [id, email, "", username, firstName, lastName, gender, birthday, jobTitle, sector, company, city, phone, 0, 0, date, date, "", ""],
   ];
 
   let sql = sprintf("INSERT INTO `%s` VALUES ? ON DUPLICATE KEY UPDATE `email` = VALUES(`email`), `username` = VALUES(`username`), `firstName` = VALUES(`firstName`), `lastName` = VALUES(`lastName`), `gender` = VALUES(`gender`), `birthday` = VALUES(`birthday`), `jobTitle` = VALUES(`jobTitle`), `sector` = VALUES(`sector`), `company` = VALUES(`company`), `city` = VALUES(`city`), `phone` = VALUES(`phone`);", dbTblName.users);
