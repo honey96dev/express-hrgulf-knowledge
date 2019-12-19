@@ -38,4 +38,5 @@ export default {
   notRegistered: "You are not registered.",
   male: "Male",
   female: "Female",
+  passwordIsSuccessfullyChanged: "Password is successfully changed",
 };

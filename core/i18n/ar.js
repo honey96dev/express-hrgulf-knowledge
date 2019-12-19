@@ -38,4 +38,5 @@ export default {
   notRegistered: "انت لم تسجل.",
   male: "الذكر",
   female: "إناثا",
+  passwordIsSuccessfullyChanged: "تم تغيير كلمة السر بنجاح",
 };

@@ -178,10 +178,31 @@ const saveProc = async (req, res, next) => {
   }
 
   if (!file || file === "null") {
-    res.status(200).send({
-      result: langs.error,
-      message: langs.unknownServerError,
-    });
+    // res.status(200).send({
+    //   result: langs.error,
+    //   message: langs.unknownServerError,
+    // });
+    // return;
+    const newRows = [
+      [id || null, topicIds, timestamp, userId, date, time, title, description, "", "", ""],
+    ];
+    let sql = sprintf("INSERT INTO `%s` VALUES ? ON DUPLICATE KEY UPDATE `topicIds` = VALUES(`topicIds`), `title` = VALUES(`title`), `description` = VALUES(`description`);", dbTblName.posts);
+    try {
+      let rows = await db.query(sql, [newRows]);
+      res.status(200).send({
+        result: langs.success,
+        message: langs.successfullySaved,
+        data: rows,
+      });
+    } catch (err) {
+      tracer.error(JSON.stringify(err));
+      tracer.error(__filename);
+      res.status(200).send({
+        result: langs.error,
+        message: langs.unknownServerError,
+        err,
+      });
+    }
     return;
   }
 

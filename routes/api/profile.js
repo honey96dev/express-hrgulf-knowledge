@@ -170,7 +170,7 @@ const changePasswordProc = async (req, res, next) => {
     await db.query(sql, [hash, id]);
     res.status(200).send({
       result: langs.success,
-      message: langs.successfullyChanged,
+      message: langs.passwordIsSuccessfullyChanged,
     });
   } catch (err) {
     tracer.error(JSON.stringify(err));
