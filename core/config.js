@@ -31,6 +31,7 @@ const session = {
 const dbTblName = {
   users: "users",
   usersSigninHistory: "users_signin_history",
+  user_avatar: "user_avatar",
   admins: "admins",
   posts: "posts",
   postTopics: "post_topics",

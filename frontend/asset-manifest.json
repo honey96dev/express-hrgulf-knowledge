@@ -30,7 +30,7 @@
     "static/css/16.chunk.css": "/static/css/16.chunk.css",
     "static/js/16.chunk.js": "/static/js/16.chunk.js",
     "index.html": "/index.html",
-    "precache-manifest.js?bb7e2ad41d6f711855b2fc41a7b798dd": "/precache-manifest.js?bb7e2ad41d6f711855b2fc41a7b798dd",
+    "precache-manifest.js?bf694c6bb7409bf00aa561b4f396558d": "/precache-manifest.js?bf694c6bb7409bf00aa561b4f396558d",
     "service-worker.js": "/service-worker.js",
     "static/media/mdb.scss": "/static/media/default-skin.svg",
     "static/media/about.png": "/static/media/about.png",
@@ -41,9 +41,12 @@
     "static/media/ghcs-200.png": "/static/media/ghcs-200.png",
     "static/media/ghcs-300.png": "/static/media/ghcs-300.png",
     "static/media/ghcs-no-title-300.png": "/static/media/ghcs-no-title-300.png",
+    "static/media/goal.png": "/static/media/goal.png",
+    "static/media/mission.png": "/static/media/mission.png",
     "static/media/news.png": "/static/media/news.png",
     "static/media/questionnaire.png": "/static/media/questionnaire.png",
     "static/media/video.png": "/static/media/video.png",
+    "static/media/vision.png": "/static/media/vision.png",
     "static/media/vote.png": "/static/media/vote.png"
   }
 }
