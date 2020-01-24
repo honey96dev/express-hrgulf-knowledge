@@ -270,14 +270,37 @@ const commentList = async (req, res, next) => {
   const langs = strings[lang];
   const {postId} = req.body;
 
-  let sql = sprintf("SELECT C.*, U.firstName, U.lastName FROM `%s` C JOIN `%s` U ON U.id = C.userId WHERE C.postId = ? ORDER BY C.timestamp DESC;", dbTblName.comments, dbTblName.users);
+  let sql = sprintf("SELECT C.*, U.firstName, U.lastName FROM `%s` C JOIN `%s` U ON U.id = C.userId WHERE C.postId = ? AND C.deletedDate = ? ORDER BY C.timestamp DESC;", dbTblName.comments, dbTblName.users);
 
   try {
-    let rows = await db.query(sql, [postId]);
+    let rows = await db.query(sql, [postId, ""]);
     res.status(200).send({
       result: langs.success,
       data: rows,
     });
+  } catch (err) {
+    tracer.error(JSON.stringify(err));
+    tracer.error(__filename);
+    res.status(200).send({
+      result: langs.error,
+      message: langs.unknownServerError,
+      err,
+    });
+  }
+};
+
+const deleteComment = async (req, res, next) => {
+  const lang = req.get(consts.lang) || consts.defaultLanguage;
+  const langs = strings[lang];
+  const {postId, userId} = req.body;
+
+  const today = new Date();
+  const date = dateformat(today, "yyyy-mm-dd");
+
+  let sql = sprintf("UPDATE `%s` SET `deletedDate` = ? WHERE `postId` = ? AND `userId` = ?;", dbTblName.comments);
+  try {
+    await db.query(sql, [date, postId, userId]);
+    commentList(req, res, next);
   } catch (err) {
     tracer.error(JSON.stringify(err));
     tracer.error(__filename);
@@ -491,6 +514,7 @@ router.post("/save", saveProc);
 router.post("/delete", deleteProc);
 router.post("/get", getProc);
 router.post("/comment-list", commentList);
+router.post("/delete-comment", deleteComment);
 router.post("/post2topics", post2TopicsProc);
 router.post("/allow", allowProc);
 router.post("/count", countProc);

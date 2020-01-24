@@ -112,7 +112,7 @@ const latestProc = async (req, res, next) => {
   const langs = strings[lang];
   let {limit} = req.body;
 
-  let sql = sprintf("SELECT P.*, U.firstName, U.lastName, IFNULL(C.comments, 0) `comments` FROM `%s` P JOIN `%s` U ON U.id = P.userId LEFT JOIN `%s` C ON C.postId = P.id WHERE P.deletedDate = ? AND P.allowedDate = ? ORDER BY P.timestamp DESC LIMIT ?, ?;", dbTblName.posts, dbTblName.users, dbTblName.comments_count);
+  let sql = sprintf("SELECT P.*, U.firstName, U.lastName, IFNULL(C.comments, 0) `comments` FROM `%s` P JOIN `%s` U ON U.id = P.userId LEFT JOIN `%s` C ON C.postId = P.id WHERE P.deletedDate = ? AND P.allowedDate != ? ORDER BY P.timestamp DESC LIMIT ?, ?;", dbTblName.posts, dbTblName.users, dbTblName.comments_count);
 
   try {
     let rows = await db.query(sql, ["", "", 0, limit]);
@@ -278,10 +278,10 @@ const getProc = async (req, res, next) => {
   const langs = strings[lang];
   const {id, userId} = req.body;
 
-  let sql = sprintf("SELECT P.*, U.firstName, U.lastName, C.userId `commentId` FROM `%s` P JOIN `%s` U ON U.id = P.userId LEFT JOIN `%s` C ON C.postId = P.id AND C.userId = ? WHERE P.id = ?;", dbTblName.posts, dbTblName.users, dbTblName.comments);
+  let sql = sprintf("SELECT P.*, U.firstName, U.lastName, C.userId `commentId` FROM `%s` P JOIN `%s` U ON U.id = P.userId LEFT JOIN `%s` C ON C.postId = P.id AND C.userId = ? AND C.deletedDate = ? WHERE P.id = ?;", dbTblName.posts, dbTblName.users, dbTblName.comments);
 
   try {
-    let rows = await db.query(sql, [userId || 0, id]);
+    let rows = await db.query(sql, [userId || 0, "", id]);
     if (rows.length > 0) {
       let row = rows[0];
       // const topicIds = row["topicIds"].split(",");
@@ -315,10 +315,10 @@ const commentList = async (req, res, next) => {
   const langs = strings[lang];
   const {postId} = req.body;
 
-  let sql = sprintf("SELECT C.*, U.firstName, U.lastName FROM `%s` C JOIN `%s` U ON U.id = C.userId WHERE C.postId = ? ORDER BY C.timestamp DESC;", dbTblName.comments, dbTblName.users);
+  let sql = sprintf("SELECT C.*, U.firstName, U.lastName FROM `%s` C JOIN `%s` U ON U.id = C.userId WHERE C.postId = ? AND C.deletedDate = ? ORDER BY C.timestamp DESC;", dbTblName.comments, dbTblName.users);
 
   try {
-    let rows = await db.query(sql, [postId]);
+    let rows = await db.query(sql, [postId, ""]);
     res.status(200).send({
       result: langs.success,
       data: rows,
