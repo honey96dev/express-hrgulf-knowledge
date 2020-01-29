@@ -4,115 +4,115 @@ self.__precacheManifest = (self.__precacheManifest || []).concat([
     "url": "/index.html"
   },
   {
-    "revision": "7d2041624206e8052df7",
+    "revision": "6f52218eb04dd0610c75",
     "url": "/static/css/10.chunk.css"
   },
   {
-    "revision": "c0704cf418c398bb1af7",
+    "revision": "9aeac18a73636aeeffc8",
     "url": "/static/css/11.chunk.css"
   },
   {
-    "revision": "8d99a1693133dfa3ccdb",
+    "revision": "336c1ba603bbb73acde2",
     "url": "/static/css/12.chunk.css"
   },
   {
-    "revision": "66e1aea86a95e4e20b19",
+    "revision": "398375a99f544fe22ad0",
     "url": "/static/css/13.chunk.css"
   },
   {
-    "revision": "7beb7c8d1ac8d7a6ed0e",
+    "revision": "60c52191928c58c9a81d",
     "url": "/static/css/14.chunk.css"
   },
   {
-    "revision": "570683b60390e2c7e590",
+    "revision": "3396ff5c33f7e2d15f69",
     "url": "/static/css/15.chunk.css"
   },
   {
-    "revision": "8bee7231d303c76b0ac0",
+    "revision": "144df95f84e1cbf6ec3a",
     "url": "/static/css/16.chunk.css"
   },
   {
-    "revision": "27d24aa9ec3fbca80e90",
+    "revision": "3741cd9b2d10fd3f8131",
     "url": "/static/css/6.chunk.css"
   },
   {
-    "revision": "c92289052db93e7c81b2",
+    "revision": "713885bbb65de95e343a",
     "url": "/static/css/7.chunk.css"
   },
   {
-    "revision": "f093c9ef08b406e4317e",
+    "revision": "ce0fd92882570cbf1f1a",
     "url": "/static/css/8.chunk.css"
   },
   {
-    "revision": "e588e6096eb03a634a73",
+    "revision": "b131939dd9b28e54885c",
     "url": "/static/css/9.chunk.css"
   },
   {
-    "revision": "4f6eb7ee8c5631a62079",
+    "revision": "a2e39ca8a10436e857ff",
     "url": "/static/css/main.chunk.css"
   },
   {
-    "revision": "0b9d77ccddeb280efe2a",
+    "revision": "1c9694bbf69821b93fd6",
     "url": "/static/js/0.chunk.js"
   },
   {
-    "revision": "c0f0fe1bc5996b7f9b49",
+    "revision": "1d52eb067f6e77f9edb1",
     "url": "/static/js/1.chunk.js"
   },
   {
-    "revision": "7d2041624206e8052df7",
+    "revision": "6f52218eb04dd0610c75",
     "url": "/static/js/10.chunk.js"
   },
   {
-    "revision": "c0704cf418c398bb1af7",
+    "revision": "9aeac18a73636aeeffc8",
     "url": "/static/js/11.chunk.js"
   },
   {
-    "revision": "8d99a1693133dfa3ccdb",
+    "revision": "336c1ba603bbb73acde2",
     "url": "/static/js/12.chunk.js"
   },
   {
-    "revision": "66e1aea86a95e4e20b19",
+    "revision": "398375a99f544fe22ad0",
     "url": "/static/js/13.chunk.js"
   },
   {
-    "revision": "7beb7c8d1ac8d7a6ed0e",
+    "revision": "60c52191928c58c9a81d",
     "url": "/static/js/14.chunk.js"
   },
   {
-    "revision": "570683b60390e2c7e590",
+    "revision": "3396ff5c33f7e2d15f69",
     "url": "/static/js/15.chunk.js"
   },
   {
-    "revision": "8bee7231d303c76b0ac0",
+    "revision": "144df95f84e1cbf6ec3a",
     "url": "/static/js/16.chunk.js"
   },
   {
-    "revision": "8598c237979cf2ad6202",
+    "revision": "e78dd913b89d2b6cd1a1",
     "url": "/static/js/2.chunk.js"
   },
   {
-    "revision": "73f2cd9eeb16efe96d37",
+    "revision": "f0b3cf411d6bdb93ff5a",
     "url": "/static/js/3.chunk.js"
   },
   {
-    "revision": "27d24aa9ec3fbca80e90",
+    "revision": "3741cd9b2d10fd3f8131",
     "url": "/static/js/6.chunk.js"
   },
   {
-    "revision": "c92289052db93e7c81b2",
+    "revision": "713885bbb65de95e343a",
     "url": "/static/js/7.chunk.js"
   },
   {
-    "revision": "f093c9ef08b406e4317e",
+    "revision": "ce0fd92882570cbf1f1a",
     "url": "/static/js/8.chunk.js"
   },
   {
-    "revision": "e588e6096eb03a634a73",
+    "revision": "b131939dd9b28e54885c",
     "url": "/static/js/9.chunk.js"
   },
   {
-    "revision": "4f6eb7ee8c5631a62079",
+    "revision": "a2e39ca8a10436e857ff",
     "url": "/static/js/main.chunk.js"
   },
   {
@@ -306,6 +306,14 @@ self.__precacheManifest = (self.__precacheManifest || []).concat([
   {
     "revision": "6832e004c9705a8332676bcd85c4138c",
     "url": "/static/media/fa-solid-900.woff2"
+  },
+  {
+    "revision": "c5fb89004804c7327c527cc73048916d",
+    "url": "/static/media/front-top-left.png"
+  },
+  {
+    "revision": "6cbb51531e16e4febba65f1566edd574",
+    "url": "/static/media/front-top-right.png"
   },
   {
     "revision": "791318c6a5817d4aa8984afeef37757d",
