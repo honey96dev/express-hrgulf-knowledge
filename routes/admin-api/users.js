@@ -26,6 +26,8 @@ const _loadData = async (req, res, next) => {
   let sql = sprintf("SELECT * FROM `%s` WHERE `deletedDate` = ? AND (`email` LIKE ? OR `username` LIKE ? AND `firstName` LIKE ? AND `lastName` LIKE ? AND `jobTitle` LIKE ? AND `sector` LIKE ? AND `company` LIKE ? AND `city` LIKE ? AND `phone` LIKE ?) %s ORDER BY `createdDate` DESC LIMIT ?, ?;", dbTblName.users, allowedWhere);
   // let sql = sprintf("SELECT * FROM `%s` WHERE `deletedDate` = ? %s ORDER BY LENGTH(`allowedDate`) ASC, `createdDate` DESC LIMIT ?, ?;", dbTblName.users, allowedWhere);
 
+  tracer.info(sql);
+
   try {
     let rows = await db.query(sql, ["", search, search, search, search, search, search, search, search, search, start, pageSize]);
     let number = start + 1;

@@ -7,6 +7,7 @@ import db from "../../core/db";
 import strings from "../../core/strings";
 import tracer from "../../core/tracer";
 import consts from "../../core/consts";
+import mailer from "../../core/mailer";
 
 const usProc = async (req, res, next) => {
   const lang = req.get(consts.lang) || consts.defaultLanguage;
@@ -25,6 +26,7 @@ const usProc = async (req, res, next) => {
 
   try {
     await db.query(sql, [newRows]);
+    await mailer.sendContactUsMail(email, name, subject);
     res.status(200).send({
       result: langs.success,
       message: langs.successfullySent

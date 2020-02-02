@@ -59,15 +59,27 @@ const dbTblName = {
   consultants: "director_board",
 };
 
+const smtp = {
+  // service: 'gmail',
+  host: 'smtp.office365.com',
+  secureConnection: true,
+  port: 587,
+  // secure: true,
+  user: 'pm@eliteresources.co',
+  pass: 'Theelite6*',
+};
+
 export {
   server,
   mysql,
   session,
   dbTblName,
+  smtp,
 }
 export default {
   server,
   mysql,
   session,
   dbTblName,
+  smtp,
 }
