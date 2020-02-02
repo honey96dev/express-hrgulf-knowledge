@@ -26,7 +26,7 @@ const usProc = async (req, res, next) => {
 
   try {
     await db.query(sql, [newRows]);
-    await mailer.sendContactUsMail(email, name, subject);
+    await mailer.sendContactUsMail( {name, email, subject, message});
     res.status(200).send({
       result: langs.success,
       message: langs.successfullySent

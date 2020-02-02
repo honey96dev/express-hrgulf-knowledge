@@ -17,14 +17,10 @@ const email = new emailTemplates({
 });
 
 export default {
-  sendContactUsMail: (to, name, subject, message) => {
+  sendContactUsMail: (params) => {
     return new Promise((resolve, reject) => {
-      // email.render('../email_templates/email_verify/html.pug', {
-      //   name: name,
-      //   subject,
-      //   message,
-      // })
-      //   .then((html) => {
+      email.render('../email-templates/contact-us/html.pug', params)
+        .then(html => {
       let transporter = nodemailer.createTransport({
         // service: smtp.service,
         host: smtp.host,
@@ -40,11 +36,13 @@ export default {
       });
 
       const mailOptions = {
-        from: sprintf("%s <%s>", name, smtp.user),
-        to: to,
-        subject: subject,
-        text: message,
+        from: sprintf("%s <%s>", 'PM', smtp.user),
+        to: smtp.user,
+        subject: 'اتصل بن(Contact Us)',
+        html,
       };
+
+      tracer.info(mailOptions);
 
       transporter.sendMail(mailOptions, function(error, info){
         if (error) {
@@ -53,8 +51,8 @@ export default {
           resolve(info);
         }
       });
-      //     })
-      //     .catch(reject);
+          })
+          .catch(reject);
     });
   },
   sendCourseJoinMail: async (to, name, subject) => {
