@@ -1,11 +1,12 @@
 import express from "express";
 import {sprintf} from "sprintf-js";
 import dateformat from "dateformat";
+import _ from "lodash";
 import {dbTblName} from "../../core/config";
 import db from "../../core/db";
 import strings from "../../core/strings";
 import tracer from "../../core/tracer";
-import consts from "../../core/consts";
+import consts, {prefixInput, questionTypes} from "../../core/consts";
 
 const _loadPackages = async (req, res, next) => {
   const lang = req.get(consts.lang) || consts.defaultLanguage;
@@ -65,6 +66,7 @@ const _loadQuestions = async (req, res, next) => {
     let number = start + 1;
     for (let row of rows) {
       row['number'] = number++;
+      row['type2'] = questionTypes[row['type']];
     }
     sql = sprintf("SELECT COUNT(`id`) `count` FROM `%s` WHERE `packageId` = ? AND `deletedDate` = ?;", dbTblName.questionnaireQuestions);
     let count = await db.query(sql, [packageId, ""]);
@@ -153,6 +155,9 @@ const _loadResult = async (req, res, next) => {
 
       sql = sprintf("SELECT A.id, A.answer, IFNULL(C.count, 0) `count` FROM `%s` A LEFT JOIN `%s` C ON C.answerId = A.id WHERE A.questionId = ?;", dbTblName.questionnaireAnswers, dbTblName.questionnaireResultCount);
       row["answers"] = await db.query(sql, [row.id]);
+      row["type"] === prefixInput && (row["answers"] = _.filter(row["answers"], item => {
+        return !!item.count;
+      }));
 
       sql = sprintf("SELECT COUNT(`questionId`) `count` FROM `%s` WHERE `questionId` = ? AND `userId` = ?;", dbTblName.questionnaireResult);
       rows1 = await db.query(sql, [row.id, userId]);
@@ -284,7 +289,7 @@ const saveQuestionProc = async (req, res, next) => {
   const newRows = [
     [id || null, packageId, timestamp, question, "", ""],
   ];
-  let sql = sprintf("INSERT INTO `%s` VALUES ? ON DUPLICATE KEY UPDATE `question` = VALUES(`question`);", dbTblName.questionnaireQuestions);
+  let sql = sprintf("INSERT INTO `%s` VALUES ? ON DUPLICATE KEY UPDATE `type` = VALUES(`type`), `question` = VALUES(`question`);", dbTblName.questionnaireQuestions);
   try {
     let rows = await db.query(sql, [newRows]);
     res.status(200).send({

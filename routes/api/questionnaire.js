@@ -1,11 +1,12 @@
 import express from "express";
 import {sprintf} from "sprintf-js";
 import dateformat from "dateformat";
+import _ from "lodash";
 import {dbTblName} from "../../core/config";
 import db from "../../core/db";
 import strings from "../../core/strings";
 import tracer from "../../core/tracer";
-import consts from "../../core/consts";
+import consts, {prefixCheckbox, prefixInput, questionTypes} from "../../core/consts";
 
 const _loadPackages = async (req, res, next) => {
   const lang = req.get(consts.lang) || consts.defaultLanguage;
@@ -132,6 +133,9 @@ const _loadResult = async (req, res, next) => {
 
       sql = sprintf("SELECT A.id, A.answer, IFNULL(C.count, 0) `count` FROM `%s` A LEFT JOIN `%s` C ON C.answerId = A.id WHERE A.questionId = ?;", dbTblName.questionnaireAnswers, dbTblName.questionnaireResultCount);
       row["answers"] = await db.query(sql, [row.id]);
+      row["type"] === prefixInput && (row["answers"] = _.filter(row["answers"], item => {
+        return !!item.count;
+      }));
 
       sql = sprintf("SELECT COUNT(`questionId`) `count` FROM `%s` WHERE `questionId` = ? AND `userId` = ?;", dbTblName.questionnaireResult);
       rows1 = await db.query(sql, [row.id, userId]);
@@ -242,27 +246,55 @@ const updateProc = async (req, res, next) => {
   const time = dateformat(today, "hh:MM TT");
   const timestamp = today.getTime();
 
-  let answersAlt = [];
+  let inputAnswers = [];
+  let checkAnswers = [];
   let newRows = [];
   let sql;
   try {
     Object.keys(answers).map(async item => {
-      answersAlt.push({questionId: item, answeredIds: answers[item]});
-
+      answers[item]['type'] === prefixCheckbox && checkAnswers.push({questionId: item, answer: answers[item]['answer']});
+      answers[item]['type'] === prefixInput && inputAnswers.push({questionId: item, answer: answers[item]['answer']});
     });
 
-    for (let answer of answersAlt) {
+    for (let answer of checkAnswers) {
       newRows = [];
-      for (let answerId of answer.answeredIds) {
+      for (let answerId of answer.answer) {
         newRows.push([answer.questionId, userId, answerId, 1, timestamp, date, time]);
       }
 
       sql = sprintf("UPDATE `%s` SET `checked` = ? WHERE `userId` = ? AND `questionId` = ?;", dbTblName.questionnaireResult);
-      console.log(userId, answer.questionId, newRows);
       await db.query(sql, [0, userId, answer.questionId]);
 
-      if (!answer.answeredIds.length) continue;
+      if (!newRows.length) continue;
 
+      sql = sprintf("INSERT INTO `%s` VALUES ? ON DUPLICATE KEY UPDATE `checked` = VALUES(`checked`), `timestamp` = VALUES(`timestamp`), `date` = VALUES(`date`), `time` = VALUES(`time`);", dbTblName.questionnaireResult);
+      await db.query(sql, [newRows]);
+    }
+
+    for (let answer of inputAnswers) {
+      sql = sprintf("SELECT * FROM `%s` WHERE `questionId` = ? AND `answer` = ?;", dbTblName.questionnaireAnswers);
+      let rows = await db.query(sql, [answer['questionId'], answer['answer']]);
+
+      let answerId;
+      if (!rows.length) {
+        const today = new Date();
+        const timestamp = today.getTime();
+        newRows = [
+          [null, timestamp, answer['questionId'], answer['answer'], ''],
+        ];
+        sql = sprintf("INSERT INTO `%s` VALUES ? ON DUPLICATE KEY UPDATE `answer` = VALUES(`answer`);", dbTblName.questionnaireAnswers);
+        let rows = await db.query(sql, [newRows]);
+        answerId = rows["insertId"];
+      } else {
+        answerId = rows[0]["id"];
+      }
+
+      newRows = [
+        [answer['questionId'], userId, answerId, 1, timestamp, date, time],
+      ];
+
+      sql = sprintf("DELETE FROM `%s` WHERE `questionId` = ? AND `userId` = ?;", dbTblName.questionnaireResult);
+      await db.query(sql, [answer['questionId'], userId]);
       sql = sprintf("INSERT INTO `%s` VALUES ? ON DUPLICATE KEY UPDATE `checked` = VALUES(`checked`), `timestamp` = VALUES(`timestamp`), `date` = VALUES(`date`), `time` = VALUES(`time`);", dbTblName.questionnaireResult);
       await db.query(sql, [newRows]);
     }

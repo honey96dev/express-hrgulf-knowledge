@@ -8,12 +8,22 @@ export const error = "error";
 export const lang = "lang";
 export const defaultPageSize = 10;
 export const defaultPageSize2 = 12;
-export const defaultLanguage = 'en';
+export const defaultLanguage = "en";
 
 export const current = "current";
 
 export const male = "M";
 export const female = "F";
+
+export const questionTypes = {
+  C: "Checkbox",
+  I: "Input",
+  R: "Radio",
+};
+
+export const prefixCheckbox = "C";
+export const prefixInput = "I";
+export const prefixRadio = "R";
 
 export const eliteResourcesUrl = "https://eliteresources.co";
 
@@ -28,5 +38,6 @@ export default {
   current,
   male,
   female,
+  questionTypes,
   eliteResourcesUrl,
 }
