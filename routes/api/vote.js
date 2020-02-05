@@ -85,6 +85,7 @@ const _loadQuestions = async (req, res, next) => {
       count: count[0]["count"],
       pageCount,
       data: rows,
+      message: langs.successfullyPosted,
     });
   } catch (err) {
     tracer.error(JSON.stringify(err));
