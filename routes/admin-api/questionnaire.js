@@ -281,13 +281,13 @@ const questionsProc = async (req, res, next) => {
 const saveQuestionProc = async (req, res, next) => {
   const lang = req.get(consts.lang) || consts.defaultLanguage;
   const langs = strings[lang];
-  const {id, packageId, question, userId} = req.body;
+  const {id, packageId, question, type, userId} = req.body;
 
   const today = new Date();
   const timestamp = today.getTime();
 
   const newRows = [
-    [id || null, packageId, timestamp, question, "", ""],
+    [id || null, packageId, timestamp, question, type, "", ""],
   ];
   let sql = sprintf("INSERT INTO `%s` VALUES ? ON DUPLICATE KEY UPDATE `question` = VALUES(`question`), `type` = VALUES(`type`);", dbTblName.questionnaireQuestions);
   try {
