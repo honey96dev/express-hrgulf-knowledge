@@ -289,7 +289,7 @@ const saveQuestionProc = async (req, res, next) => {
   const newRows = [
     [id || null, packageId, timestamp, question, "", ""],
   ];
-  let sql = sprintf("INSERT INTO `%s` VALUES ? ON DUPLICATE KEY UPDATE `type` = VALUES(`type`), `question` = VALUES(`question`);", dbTblName.questionnaireQuestions);
+  let sql = sprintf("INSERT INTO `%s` VALUES ? ON DUPLICATE KEY UPDATE `question` = VALUES(`question`), `type` = VALUES(`type`);", dbTblName.questionnaireQuestions);
   try {
     let rows = await db.query(sql, [newRows]);
     res.status(200).send({
