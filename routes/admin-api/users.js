@@ -1,11 +1,11 @@
 import express from "express";
 import {sprintf} from "sprintf-js";
 import dateformat from "dateformat";
-import {dbTblName} from "../../core/config";
-import db from "../../core/db";
-import strings from "../../core/strings";
-import tracer from "../../core/tracer";
-import consts from "../../core/consts";
+import {dbTblName} from "core/config";
+import db from "core/db";
+import strings from "core/strings";
+import tracer from "core/tracer";
+import consts from "core/consts";
 
 const _loadData = async (req, res, next) => {
   const lang = req.get(consts.lang) || consts.defaultLanguage;
@@ -26,7 +26,7 @@ const _loadData = async (req, res, next) => {
   let sql = sprintf("SELECT * FROM `%s` WHERE `deletedDate` = ? AND (`email` LIKE ? OR `username` LIKE ? AND `firstName` LIKE ? AND `lastName` LIKE ? AND `jobTitle` LIKE ? AND `sector` LIKE ? AND `company` LIKE ? AND `city` LIKE ? AND `phone` LIKE ?) %s ORDER BY `createdDate` DESC LIMIT ?, ?;", dbTblName.users, allowedWhere);
   // let sql = sprintf("SELECT * FROM `%s` WHERE `deletedDate` = ? %s ORDER BY LENGTH(`allowedDate`) ASC, `createdDate` DESC LIMIT ?, ?;", dbTblName.users, allowedWhere);
 
-  tracer.info(sql);
+  // tracer.info(sql);
 
   try {
     let rows = await db.query(sql, ["", search, search, search, search, search, search, search, search, search, start, pageSize]);

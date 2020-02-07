@@ -1,4 +1,4 @@
-import dbConn from "./dbConn";
+import dbConn from "core/dbConn";
 
 const db = {};
 

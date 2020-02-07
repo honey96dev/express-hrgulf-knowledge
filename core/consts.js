@@ -2,6 +2,7 @@ export const uploadPath = {
   posts: "uploads/posts",
   news: "uploads/news",
   avatars: "uploads/avatars",
+  aboutUs: "uploads/about-us",
 };
 export const success = "success";
 export const error = "error";

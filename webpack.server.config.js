@@ -5,20 +5,20 @@
  *
  * Note: that prod and dev mode are set in npm scripts.
  */
-const path = require('path');
-const webpack = require('webpack');
-const nodeExternals = require('webpack-node-externals');
-const JavaScriptObfuscator = require('webpack-obfuscator');
+const path = require("path");
+const webpack = require("webpack");
+const nodeExternals = require("webpack-node-externals");
+const JavaScriptObfuscator = require("webpack-obfuscator");
 
 module.exports = (env, argv) => {
-  const SERVER_PATH = './bin/start-webapp.js';
+  const SERVER_PATH = "./bin/start-webapp.js";
   return ({
     entry: {
       server: SERVER_PATH,
     },
     output: {
-      path: path.join(__dirname, 'backend'),
-      publicPath: '/',
+      path: path.join(__dirname, "backend"),
+      publicPath: "/",
       filename: '[name].' + argv.mode + '.js',
     },
     mode: argv.mode,
@@ -27,6 +27,11 @@ module.exports = (env, argv) => {
       // Need this when working with express, otherwise the build fails
       __dirname: false,   // if you don't put this is, __dirname
       __filename: false,  // and __filename return blank or /
+    },
+    resolve: {
+      modules: [
+        path.resolve("./"),
+      ],
     },
     externals: [nodeExternals()], // Need this to avoid error when working with Express
     module: {

@@ -1,12 +1,12 @@
 import express from "express";
 import jwt from "jsonwebtoken";
 import {sprintf} from "sprintf-js";
-import {dbTblName, session} from "../../core/config";
-import db from "../../core/db";
-import myCrypto from "../../core/myCrypto";
-import strings from "../../core/strings";
-import tracer from "../../core/tracer";
-import consts from "../../core/consts";
+import {dbTblName, session} from "core/config";
+import db from "core/db";
+import myCrypto from "core/myCrypto";
+import strings from "core/strings";
+import tracer from "core/tracer";
+import consts from "core/consts";
 
 const signInProc = async (req, res, next) => {
   const lang = req.get(consts.lang) || consts.defaultLanguage;

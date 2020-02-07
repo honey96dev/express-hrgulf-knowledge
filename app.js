@@ -9,9 +9,10 @@ import cors from "cors";
 import helmet from "helmet";
 import Ddos from "ddos";
 
+import {session} from "core/config";
+
 import apiRouter from "./routes/api";
 import adminApiRouter from "./routes/admin-api";
-import {session} from "./core/config";
 
 const app = express();
 const cwd = process.cwd();

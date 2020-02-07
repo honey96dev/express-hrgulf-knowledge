@@ -1,10 +1,10 @@
 import express from "express";
 import {sprintf} from "sprintf-js";
-import {dbTblName} from "../../core/config";
-import db from "../../core/db";
-import strings from "../../core/strings";
-import tracer from "../../core/tracer";
-import consts from "../../core/consts";
+import {dbTblName} from "core/config";
+import db from "core/db";
+import strings from "core/strings";
+import tracer from "core/tracer";
+import consts from "core/consts";
 
 const listProc = async (req, res, next) => {
   const lang = req.get(consts.lang) || consts.defaultLanguage;

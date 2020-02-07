@@ -2,12 +2,12 @@ import express from "express";
 import jwt from "jsonwebtoken";
 import {sprintf} from "sprintf-js";
 import dateformat from "dateformat";
-import {dbTblName, session} from "../../core/config";
-import db from "../../core/db";
-import myCrypto from "../../core/myCrypto";
-import strings from "../../core/strings";
-import tracer from "../../core/tracer";
-import consts from "../../core/consts";
+import {dbTblName, session} from "core/config";
+import db from "core/db";
+import myCrypto from "core/myCrypto";
+import strings from "core/strings";
+import tracer from "core/tracer";
+import consts from "core/consts";
 
 const signInProc = async (req, res, next) => {
   const lang = req.get(consts.lang) || consts.defaultLanguage;
@@ -98,7 +98,7 @@ const signInProc = async (req, res, next) => {
 const signUpProc = async (req, res, next) => {
   const lang = req.get(consts.lang) || consts.defaultLanguage;
   const langs = strings[lang];
-  const {email, password, username, firstName, lastName, gender, birthday, jobTitle, sector, company, city, phone} = req.body;
+  const {email, password, username, firstName, lastName, gender, birthday, jobTitle, sector, company, city, countryCode, phone} = req.body;
   const hash = myCrypto.hmacHex(password);
   const today = new Date();
   const date = dateformat(today, "yyyy-mm-dd");
@@ -114,8 +114,9 @@ const signUpProc = async (req, res, next) => {
       return;
     }
     const newRows = [
-      [null, email, hash, username, firstName, lastName, gender, birthday, jobTitle, sector, company, city, phone, 0, 0, date, date, "", ""],
+      [null, email, hash, username, firstName, lastName, gender, birthday, jobTitle, sector, company, city, countryCode, phone, 0, 0, date, date, "", ""],
     ];
+    tracer.info(countryCode, newRows);
     sql = sprintf("INSERT INTO `%s` VALUES ?;", dbTblName.users);
     await db.query(sql, [newRows]);
 
@@ -134,6 +135,10 @@ const signUpProc = async (req, res, next) => {
       err,
     });
   }
+};
+
+const sendForgotPasswordMail = async (req, res, next) => {
+
 };
 
 const router = express.Router();

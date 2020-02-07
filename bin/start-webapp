@@ -4,4 +4,5 @@ require("@babel/register")({
 require("@babel/polyfill");
 
 // Import the rest of our application.
+require('app-module-path').addPath("./");
 module.exports = require("./start-webapp.js");

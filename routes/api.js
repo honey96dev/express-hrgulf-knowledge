@@ -8,6 +8,7 @@ import videoRouter from "./api/video";
 import questionnaireRouter from "./api/questionnaire";
 import voteRouter from "./api/vote";
 import contactRouter from "./api/contact";
+import aboutRouter from "./api/about";
 
 const router = express.Router();
 
@@ -19,5 +20,6 @@ router.use("/video", videoRouter);
 router.use("/questionnaire", questionnaireRouter);
 router.use("/vote", voteRouter);
 router.use("/contact", contactRouter);
+router.use("/about", aboutRouter);
 
 export default router;

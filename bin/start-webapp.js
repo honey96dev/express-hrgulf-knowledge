@@ -1,10 +1,10 @@
-import app from "../app";
+import app from "app";
 import debugLib from "debug";
 import http from "http";
 import https from "https";
 import cluster from "cluster";
 import fs from "fs";
-import {server} from "../core/config";
+import {server} from "core/config";
 
 let debug;
 let port;

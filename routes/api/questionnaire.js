@@ -2,11 +2,11 @@ import express from "express";
 import {sprintf} from "sprintf-js";
 import dateformat from "dateformat";
 import _ from "lodash";
-import {dbTblName} from "../../core/config";
-import db from "../../core/db";
-import strings from "../../core/strings";
-import tracer from "../../core/tracer";
-import consts, {prefixCheckbox, prefixInput, questionTypes} from "../../core/consts";
+import {dbTblName} from "core/config";
+import db from "core/db";
+import strings from "core/strings";
+import tracer from "core/tracer";
+import consts, {prefixCheckbox, prefixInput, questionTypes} from "core/consts";
 
 const _loadPackages = async (req, res, next) => {
   const lang = req.get(consts.lang) || consts.defaultLanguage;
