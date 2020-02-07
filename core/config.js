@@ -56,6 +56,8 @@ const dbTblName = {
   contactUs: "contact_us",
   aboutUs: "about_us",
 
+  resetPasswordTokens: "reset_password_tokens",
+
   eliteResourcesDb: "portal3sections",
   consultants: "director_board",
 };

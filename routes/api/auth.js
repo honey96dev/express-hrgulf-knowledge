@@ -138,6 +138,44 @@ const signUpProc = async (req, res, next) => {
 };
 
 const sendForgotPasswordMail = async (req, res, next) => {
+  const lang = req.get(consts.lang) || consts.defaultLanguage;
+  const langs = strings[lang];
+  const {email} = req.body;
+
+  let today = new Date();
+
+  const timestamp = today.getTime();
+  today = new Date(timestamp + 5 * 60 * 1000);
+  const expire = today.getTime();
+  const token = myCrypto.hmacHex(`${email}${timestamp}`);
+  const used = myCrypto.hmacHex(`${timestamp}${token}${expire}`);
+
+  tracer.info(timestamp, expire, today);
+
+  let sql = sprintf("INSERT INTO `%s` VALUES ? ON DUPLICATE KEY UPDATE `timestamp` = VALUES(`timestamp`), `` = VALUES(`token`), `` = VALUES(`token`), `expire` = VALUES(`expire`), `used` = VALUES(`used`);", dbTblName.resetPasswordTokens);
+
+  const newRows = [
+    [email, timestamp, token, expire, used],
+  ];
+
+  try {
+    await db.query(sql, [newRows]);
+    res.status(200).send({
+      result: langs.success,
+      message: langs.successfullySent,
+    });
+  } catch (err) {
+    tracer.error(JSON.stringify(err));
+    tracer.error(__filename);
+    res.status(200).send({
+      result: langs.error,
+      message: langs.unknownServerError,
+      err,
+    });
+  }
+};
+
+const resetPassword = async (req, res, next) => {
 
 };
 
