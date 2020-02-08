@@ -130,7 +130,7 @@ const signInProc = async (req, res, next) => {
 const signUpProc = async (req, res, next) => {
   const lang = req.get(consts.lang) || consts.defaultLanguage;
   const langs = strings[lang];
-  const {email, password, username, firstName, lastName, gender, birthday, jobTitle, sector, company, city, countryCode, phone} = req.body;
+  const {email, password, username, firstName, fatherName, lastName, gender, birthday, jobTitle, sector, company, city, countryCode, phone} = req.body;
   const hash = myCrypto.hmacHex(password);
   const today = new Date();
   const date = dateformat(today, "yyyy-mm-dd");
@@ -146,7 +146,7 @@ const signUpProc = async (req, res, next) => {
       return;
     }
     const newRows = [
-      [null, email, hash, username, firstName, lastName, gender, birthday, jobTitle, sector, company, city, countryCode, phone, 0, 0, date, date, "", ""],
+      [null, email, hash, username, firstName, fatherName, lastName, gender, birthday, jobTitle, sector, company, city, countryCode, phone, 0, 0, date, date, "", ""],
     ];
     tracer.info(countryCode, newRows);
     sql = sprintf("INSERT INTO `%s` VALUES ?;", dbTblName.users);

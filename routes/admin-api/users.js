@@ -113,14 +113,14 @@ const deleteProc = async (req, res, next) => {
 const saveProc = async (req, res, next) => {
   const lang = req.get(consts.lang) || consts.defaultLanguage;
   const langs = strings[lang];
-  const {id, email, username, firstName, lastName, gender, birthday, jobTitle, sector, company, city, phone} = req.body;
+  const {id, email, username, firstName, fatherName, lastName, gender, birthday, jobTitle, sector, company, city, phone} = req.body;
 
   const today = new Date();
   const date = dateformat(today, "yyyy-mm-dd");
 
-  let sql = sprintf("UPDATE `%s` SET `email` = ?, `username` = ?, `firstName` = ?, `lastName` = ?, `gender` = ?, `birthday` = ?, `jobTitle` = ?, `sector` = ?, `company` = ?, `city` = ?, `phone` = ?, `modifiedDate` = ? WHERE `id` = ?;", dbTblName.users);
+  let sql = sprintf("UPDATE `%s` SET `email` = ?, `username` = ?, `firstName` = ?, `fatherName` = ?, `lastName` = ?, `gender` = ?, `birthday` = ?, `jobTitle` = ?, `sector` = ?, `company` = ?, `city` = ?, `phone` = ?, `modifiedDate` = ? WHERE `id` = ?;", dbTblName.users);
   try {
-    await db.query(sql, [email, username, firstName, lastName, gender, birthday, jobTitle, sector, company, city, phone, date, id]);
+    await db.query(sql, [email, username, firstName, fatherName, lastName, gender, birthday, jobTitle, sector, company, city, phone, date, id]);
 
     res.status(200).send({
       result: langs.success,

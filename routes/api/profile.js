@@ -108,16 +108,16 @@ const saveAvatarProc = async (req, res, next) => {
 const saveProc = async (req, res, next) => {
   const lang = req.get(consts.lang) || consts.defaultLanguage;
   const langs = strings[lang];
-  let {id, email, username, firstName, lastName, gender, birthday, jobTitle, sector, company, city, countryCode, phone} = req.body;
+  let {id, email, username, firstName, fatherName, lastName, gender, birthday, jobTitle, sector, company, city, countryCode, phone} = req.body;
 
   const today = new Date();
   const date = dateformat(today, "yyyy-mm-dd");
 
   const newRows = [
-    [id, email, "", username, firstName, lastName, gender, birthday, jobTitle, sector, company, city, countryCode, phone, 0, 0, date, date, "", ""],
+    [id, email, "", username, firstName, fatherName, lastName, gender, birthday, jobTitle, sector, company, city, countryCode, phone, 0, 0, date, date, "", ""],
   ];
 
-  let sql = sprintf("INSERT INTO `%s` VALUES ? ON DUPLICATE KEY UPDATE `email` = VALUES(`email`), `username` = VALUES(`username`), `firstName` = VALUES(`firstName`), `lastName` = VALUES(`lastName`), `gender` = VALUES(`gender`), `birthday` = VALUES(`birthday`), `jobTitle` = VALUES(`jobTitle`), `sector` = VALUES(`sector`), `company` = VALUES(`company`), `city` = VALUES(`city`), `countryCode` = VALUES(`countryCode`), `phone` = VALUES(`phone`);", dbTblName.users);
+  let sql = sprintf("INSERT INTO `%s` VALUES ? ON DUPLICATE KEY UPDATE `email` = VALUES(`email`), `username` = VALUES(`username`), `firstName` = VALUES(`firstName`), `fatherName` = VALUES(`fatherName`), `lastName` = VALUES(`lastName`), `gender` = VALUES(`gender`), `birthday` = VALUES(`birthday`), `jobTitle` = VALUES(`jobTitle`), `sector` = VALUES(`sector`), `company` = VALUES(`company`), `city` = VALUES(`city`), `countryCode` = VALUES(`countryCode`), `phone` = VALUES(`phone`);", dbTblName.users);
   try {
     let rows = await db.query(sql, [newRows]);
     const token = jwt.sign(
@@ -133,7 +133,7 @@ const saveProc = async (req, res, next) => {
       result: langs.success,
       message: langs.successfullySaved,
       data: {
-        user: {id, email, username, firstName, lastName, gender, birthday, jobTitle, sector, company, city, countryCode, phone},
+        user: {id, email, username, firstName, fatherName, lastName, gender, birthday, jobTitle, sector, company, city, countryCode, phone},
         token,
       },
     });
