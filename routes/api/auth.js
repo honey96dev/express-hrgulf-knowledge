@@ -195,7 +195,7 @@ const sendForgotPasswordMailProc = async (req, res, next) => {
     }
     const user = rows[0];
     const name = `${user.firstName} ${user.lastName}`;
-    const url = `${config.server.baseUrl}${resetPasswordUri}/${encodeURIComponent(email)}/${token}`;
+    const url = `${config.server.baseUrl}${resetPasswordUri}/${email}/${token}`;
     tracer.info(token);
     await mailer.sendForgotPasswordMail({email, name, url, subject: langs.forgotPassword});
 
