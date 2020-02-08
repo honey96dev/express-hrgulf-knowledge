@@ -39,4 +39,9 @@ export default {
   male: "انثى",
   female: "ذكر",
   passwordIsSuccessfullyChanged: "تم تغيير كلمة السر بنجاح",
+  forgotPassword: "إعادة تعيين كلمة المرور(Reset Password)",
+  tokenIsValid: "الرمز صالح",
+  tokenIsExpired: "انتهت صلاحية الرمز. أعد المحاولة لإعادة تعيين كلمة المرور.",
+  tokenIsNotFound: "الرمز غير صالح. أعد المحاولة لإعادة تعيين كلمة المرور.",
+  tokenIsAlreadyUsed: "Token يستخدم بالفعل. أعد المحاولة لإعادة تعيين كلمة المرور.",
 };

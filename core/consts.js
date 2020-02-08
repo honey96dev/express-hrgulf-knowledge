@@ -26,6 +26,17 @@ export const prefixCheckbox = "C";
 export const prefixInput = "I";
 export const prefixRadio = "R";
 
+export const tokenLifetime = 24;
+export const tokenStatus = {
+  VALID: 1,
+  EXPIRED: 2,
+  NOT_FOUND: 3,
+  ALREADY_USED: 4,
+  EMAIL_NOT_FOUND: 5,
+};
+
+export const resetPasswordUri = "auth/reset-password";
+
 export const eliteResourcesUrl = "https://eliteresources.co";
 
 export default {
@@ -40,5 +51,11 @@ export default {
   male,
   female,
   questionTypes,
+  prefixCheckbox,
+  prefixInput,
+  prefixRadio,
+  tokenLifetime,
+  tokenStatus,
+  resetPasswordUri,
   eliteResourcesUrl,
 }
