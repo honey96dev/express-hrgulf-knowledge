@@ -208,7 +208,7 @@ const sendForgotPasswordMailProc = async (req, res, next) => {
     await db.query(sql, [newRows]);
     res.status(200).send({
       result: langs.success,
-      message: langs.successfullySent,
+      message: langs.resetEmailIsSent,
     });
   } catch (err) {
     tracer.error(JSON.stringify(err));
