@@ -40,6 +40,7 @@ export default {
   female: "ذكر",
   passwordIsSuccessfullyChanged: "تم تغيير كلمة السر بنجاح",
   forgotPassword: "إعادة تعيين كلمة المرور(Reset Password)",
+  resetEmailIsSent: "إعادة تعيين البريد الإلكتروني يتم إرسالها إلى البريد الإلكتروني الخاص بك. تحقق من بريدك الوارد.",
   tokenIsValid: "الرمز صالح",
   tokenIsExpired: "انتهت صلاحية الرمز. أعد المحاولة لإعادة تعيين كلمة المرور.",
   tokenIsNotFound: "الرمز غير صالح. أعد المحاولة لإعادة تعيين كلمة المرور.",
