@@ -40,7 +40,7 @@ export default {
   female: "Female",
   passwordIsSuccessfullyChanged: "Password is successfully changed",
   forgotPassword: "إعادة تعيين كلمة المرور(Reset Password)",
-  resetEmailIsSent: "Reset Email is sent to your email. Check your inbox.",
+  resetEmailIsSent: "An email with instructions to reset your password has been sent.",
   tokenIsValid: "Token is valid",
   tokenIsExpired: "Token is expired. Retry to reset the password.",
   tokenIsNotFound: "Token is invalid. Retry to reset the password.",
