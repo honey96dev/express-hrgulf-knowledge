@@ -21,7 +21,9 @@ const loadAboutUs = async (req, res, next) => {
     let rows = await db.query(sql);
     let data = {
       brochure: "",
+      originBrochure: "",
       video: "",
+      originVideo: "",
     };
     if (rows.length > 0) {
       data = rows[0];
