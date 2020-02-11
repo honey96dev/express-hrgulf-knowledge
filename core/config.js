@@ -71,8 +71,8 @@ const smtp = {
   user: 'pm@eliteresources.co',
   pass: 'Theelite6*',
   limit: {
-    receipt: 4999,
-    message: 29,
+    receipt: 2999,
+    message: 19,
   },
 };
 
