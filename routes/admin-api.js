@@ -9,6 +9,7 @@ import questionnaireRouter from "./admin-api/questionnaire";
 import voteRouter from "./admin-api/vote";
 import usersRouter from "./admin-api/users";
 import aboutRouter from "./admin-api/about";
+import massEmailRouter from "./admin-api/mass-email";
 
 const router = express.Router();
 
@@ -21,5 +22,6 @@ router.use("/questionnaire", questionnaireRouter);
 router.use("/vote", voteRouter);
 router.use("/users", usersRouter);
 router.use("/about", aboutRouter);
+router.use("/mass-email", massEmailRouter);
 
 export default router;
