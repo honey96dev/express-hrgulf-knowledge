@@ -70,6 +70,10 @@ const smtp = {
   // secure: true,
   user: 'pm@eliteresources.co',
   pass: 'Theelite6*',
+  limit: {
+    receipt: 9999,
+    message: 29,
+  },
 };
 
 export {
