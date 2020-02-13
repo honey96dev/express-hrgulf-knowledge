@@ -36,8 +36,9 @@
     "static/js/20.chunk.js": "/static/js/20.chunk.js",
     "static/js/21.chunk.js": "/static/js/21.chunk.js",
     "index.html": "/index.html",
-    "precache-manifest.js?6a62159d5574d2b35321ae80f19f8ad4": "/precache-manifest.js?6a62159d5574d2b35321ae80f19f8ad4",
+    "precache-manifest.js?363f3fe874fcbfd6b0ce647cc964d699": "/precache-manifest.js?363f3fe874fcbfd6b0ce647cc964d699",
     "service-worker.js": "/service-worker.js",
+    "static/media/index.scss": "/static/media/Droid Arabic Kufi.woff",
     "static/media/mdb.scss": "/static/media/default-skin.svg",
     "static/media/all.min.css": "/static/media/fa-solid-900.woff2"
   }
