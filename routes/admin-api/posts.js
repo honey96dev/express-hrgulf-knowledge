@@ -120,7 +120,7 @@ const _loadMagazines = async (req, res, next) => {
 
   let start = pageSize * (page - 1);
 
-  let sql = sprintf("SELECT * FROM `%s` WHERE `deletedDate` = ? ORDER BY `timestamp` ASC LIMIT ?, ?;", dbTblName.magazines);
+  let sql = sprintf("SELECT * FROM `%s` WHERE `deletedDate` = ?  ORDER BY `date` DESC LIMIT ?, ?;", dbTblName.magazines);
 
   try {
     let rows = await db.query(sql, ["", start, pageSize]);
