@@ -10,18 +10,76 @@ import consts from "core/consts";
 const _loadData = async (req, res, next) => {
   const lang = req.get(consts.lang) || consts.defaultLanguage;
   const langs = strings[lang];
-  let {page, pageSize, userId} = req.body;
+  let {page, pageSize, userId, sections} = req.body;
   page || (page = 1);
-  pageSize || (pageSize = consts.defaultPageSize2);
+  pageSize || (pageSize = consts.defaultPageSize);
 
   const start = pageSize * (page - 1);
 
-  let sql = sprintf("SELECT P.*, U.firstName, U.lastName FROM `%s` P JOIN `%s` U ON U.id = P.userId WHERE P.deletedDate = ? AND P.userId LIKE ? ORDER BY P.timestamp DESC LIMIT ?, ?;", dbTblName.video, dbTblName.users);
+  let sql;
+  let rows;
+
+  let where = "";
+  if (!!sections && !!sections.length) {
+    sql = sprintf("SELECT `videoId` FROM `%s` WHERE `sectionId` IN (?) AND `related` = ?;", dbTblName.video2Sections);
+    rows = await db.query(sql, [sections, 1]);
+
+    let tmp = [];
+    for (let row of rows) {
+      tmp.push(row["videoId"]);
+    }
+    if (!!tmp.length) {
+      where = sprintf("AND P.id IN (%s)", tmp.join(","));
+    } else {
+      where = sprintf("AND P.id = '0'");
+    }
+  }
+
+
+  sql = sprintf("SELECT P.*, U.firstName, U.lastName FROM `%s` P JOIN `%s` U ON U.id = P.userId WHERE P.deletedDate = ? AND P.userId LIKE ? %s ORDER BY P.timestamp DESC LIMIT ?, ?;", dbTblName.video, dbTblName.users, where);
 
   try {
     let rows = await db.query(sql, ["", userId || "%%", start, pageSize]);
-    sql = sprintf("SELECT COUNT(`id`) `count` FROM `%s` WHERE `deletedDate` = '%s' AND `userId` LIKE '%s';", dbTblName.video, "", userId || "%%");
-    let count = await db.query(sql, null);
+    sql = sprintf("SELECT COUNT(`id`) `count` FROM `%s` WHERE `deletedDate` = ? AND `userId` LIKE ? %s;", dbTblName.video, "", userId || "%%", where);
+    let count = await db.query(sql, ["", userId || "%%"]);
+    let pageCount = 0;
+    count.length > 0 && (pageCount = Math.ceil(count[0]['count'] / pageSize));
+    res.status(200).send({
+      result: langs.success,
+      count: count[0]['count'],
+      pageCount,
+      data: rows,
+    });
+  } catch (err) {
+    tracer.error(JSON.stringify(err));
+    tracer.error(__filename);
+    res.status(200).send({
+      result: langs.error,
+      message: langs.unknownServerError,
+      err,
+    });
+  }
+};
+
+const _loadSections = async (req, res, next) => {
+  const lang = req.get(consts.lang) || consts.defaultLanguage;
+  const langs = strings[lang];
+  let {page, pageSize} = req.body;
+  page || (page = 1);
+  pageSize || (pageSize = consts.defaultPageSize);
+
+  let start = pageSize * (page - 1);
+
+  let sql = sprintf("SELECT * FROM `%s` WHERE `deletedDate` = ? ORDER BY `timestamp` ASC LIMIT ?, ?;", dbTblName.videoSections);
+
+  try {
+    let rows = await db.query(sql, ["", start, pageSize]);
+    for (let row of rows) {
+      row["number"] = ++start;
+    }
+
+    sql = sprintf("SELECT COUNT(`id`) `count` FROM `%s` WHERE `deletedDate` = ?;", dbTblName.videoSections);
+    let count = await db.query(sql, [""]);
     let pageCount = 0;
     count.length > 0 && (pageCount = Math.ceil(count[0]['count'] / pageSize));
     res.status(200).send({
@@ -132,11 +190,16 @@ const getProc = async (req, res, next) => {
   }
 };
 
+const sectionsProc = async (req, res, next) => {
+  await _loadSections(req, res, next);
+};
+
 const router = express.Router();
 
 router.post("/list", listProc);
 // router.post("/save", saveProc);
 // router.post("/delete", deleteProc);
 router.post("/get", getProc);
+router.post("/sections", sectionsProc);
 
 export default router;
