@@ -41,6 +41,8 @@ const dbTblName = {
   comments_count: "comments_count",
   news: "news",
   video: "video",
+  videoSections: "video_sections",
+  video2Sections: "video2sections",
   questionnairePackages: "questionnaire_packages",
   questionnaireQuestions: "questionnaire_questions",
   questionnaireQuestionsCount: "questionnaire_questions_count",
