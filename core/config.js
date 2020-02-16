@@ -36,6 +36,7 @@ const dbTblName = {
   posts: "posts",
   postTopics: "post_topics",
   post2Topics: "post2topics",
+  magazines: "magazines",
   comments: "comments",
   comments_count: "comments_count",
   news: "news",

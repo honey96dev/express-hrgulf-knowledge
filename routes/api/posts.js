@@ -103,6 +103,44 @@ const _loadTopics = async (req, res, next) => {
   }
 };
 
+const _loadMagazines = async (req, res, next) => {
+  const lang = req.get(consts.lang) || consts.defaultLanguage;
+  const langs = strings[lang];
+  let {page, pageSize} = req.body;
+  page || (page = 1);
+  pageSize || (pageSize = consts.defaultPageSize);
+
+  let start = pageSize * (page - 1);
+
+  let sql = sprintf("SELECT * FROM `%s` WHERE `deletedDate` = ? ORDER BY `timestamp` ASC LIMIT ?, ?;", dbTblName.magazines);
+
+  try {
+    let rows = await db.query(sql, ["", start, pageSize]);
+    for (let row of rows) {
+      row["number"] = ++start;
+    }
+
+    sql = sprintf("SELECT COUNT(`id`) `count` FROM `%s` WHERE `deletedDate` = ?;", dbTblName.magazines);
+    let count = await db.query(sql, [""]);
+    let pageCount = 0;
+    count.length > 0 && (pageCount = Math.ceil(count[0]['count'] / pageSize));
+    res.status(200).send({
+      result: langs.success,
+      count: count[0]['count'],
+      pageCount,
+      data: rows,
+    });
+  } catch (err) {
+    tracer.error(JSON.stringify(err));
+    tracer.error(__filename);
+    res.status(200).send({
+      result: langs.error,
+      message: langs.unknownServerError,
+      err,
+    });
+  }
+};
+
 const listProc = async (req, res, next) => {
   _loadData(req, res, next);
 };
@@ -396,6 +434,43 @@ const topicsProc = async (req, res, next) => {
   await _loadTopics(req, res, next);
 };
 
+const magazinesProc = async (req, res, next) => {
+  await _loadMagazines(req, res, next);
+};
+
+const getMagazineProc = async (req, res, next) => {
+  const lang = req.get(consts.lang) || consts.defaultLanguage;
+  const langs = strings[lang];
+  const {id, userId} = req.body;
+
+  let sql = sprintf("SELECT * FROM `%s` WHERE `id` = ?;", dbTblName.magazines);
+
+  try {
+    let rows = await db.query(sql, [id]);
+    if (rows.length > 0) {
+      let row = rows[0];
+
+      res.status(200).send({
+        result: langs.success,
+        data: row,
+      });
+    } else {
+      res.status(200).send({
+        result: langs.error,
+        message: langs.noData,
+      });
+    }
+  } catch (err) {
+    tracer.error(JSON.stringify(err));
+    tracer.error(__filename);
+    res.status(200).send({
+      result: langs.error,
+      message: langs.unknownServerError,
+      err,
+    });
+  }
+};
+
 const router = express.Router();
 
 router.post("/list", listProc);
@@ -406,5 +481,7 @@ router.post("/comment-list", commentList);
 router.post("/write-comment", writeComment);
 router.post("/post2topics", post2TopicsProc);
 router.post("/topics", topicsProc);
+router.post("/magazines", magazinesProc);
+router.post("/get-magazine", getMagazineProc)
 
 export default router;

@@ -10,6 +10,7 @@ import db from "core/db";
 import strings from "core/strings";
 import tracer from "core/tracer";
 import consts from "core/consts";
+import helpers from "core/helpers";
 
 const _loadData = async (req, res, next) => {
   const lang = req.get(consts.lang) || consts.defaultLanguage;
@@ -90,6 +91,44 @@ const _loadTopics = async (req, res, next) => {
     }
 
     sql = sprintf("SELECT COUNT(`id`) `count` FROM `%s` WHERE `deletedDate` = ?;", dbTblName.postTopics);
+    let count = await db.query(sql, [""]);
+    let pageCount = 0;
+    count.length > 0 && (pageCount = Math.ceil(count[0]['count'] / pageSize));
+    res.status(200).send({
+      result: langs.success,
+      count: count[0]['count'],
+      pageCount,
+      data: rows,
+    });
+  } catch (err) {
+    tracer.error(JSON.stringify(err));
+    tracer.error(__filename);
+    res.status(200).send({
+      result: langs.error,
+      message: langs.unknownServerError,
+      err,
+    });
+  }
+};
+
+const _loadMagazines = async (req, res, next) => {
+  const lang = req.get(consts.lang) || consts.defaultLanguage;
+  const langs = strings[lang];
+  let {page, pageSize} = req.body;
+  page || (page = 1);
+  pageSize || (pageSize = consts.defaultPageSize);
+
+  let start = pageSize * (page - 1);
+
+  let sql = sprintf("SELECT * FROM `%s` WHERE `deletedDate` = ? ORDER BY `timestamp` ASC LIMIT ?, ?;", dbTblName.magazines);
+
+  try {
+    let rows = await db.query(sql, ["", start, pageSize]);
+    for (let row of rows) {
+      row["number"] = ++start;
+    }
+
+    sql = sprintf("SELECT COUNT(`id`) `count` FROM `%s` WHERE `deletedDate` = ?;", dbTblName.magazines);
     let count = await db.query(sql, [""]);
     let pageCount = 0;
     count.length > 0 && (pageCount = Math.ceil(count[0]['count'] / pageSize));
@@ -507,6 +546,121 @@ const getTopicProc = async (req, res, next) => {
   }
 };
 
+const magazinesProc = async (req, res, next) => {
+  await _loadMagazines(req, res, next);
+};
+
+const saveMagazineProc = async (req, res, next) => {
+  const lang = req.get(consts.lang) || consts.defaultLanguage;
+  const langs = strings[lang];
+  const {id, date, title, description, file} = req.body;
+
+  const today = new Date();
+  const timestamp = today.getTime();
+
+  const appDir = process.cwd();
+  const fileDir = path.join(appDir, "public", consts.uploadPath.magazines);
+  let fileName = "";
+  if (!!file) {
+    fileName = await helpers.uploadFile(file, fileDir);
+  }
+  let media = sprintf("%s/%s", consts.uploadPath.magazines, fileName);
+
+  let sql;
+  let rows;
+  let row;
+  if (!!id) {
+    sql = sprintf("SELECT * FROM `%s` WHERE `id` = ?;", dbTblName.magazines);
+    rows = await db.query(sql, [id]);
+    if (rows.length > 0) {
+      row = rows[0];
+      let oldFilename = path.join(fileDir, path.basename(row["media"]));
+      !!file && fs.unlink(oldFilename, e => {
+
+      });
+    }
+  }
+
+  if (!fileName.length) {
+    media = row["media"];
+  }
+
+  const newRows = [
+    [id, timestamp, date, title, description, media, ""],
+  ];
+  sql = sprintf("INSERT INTO `%s` VALUES ? ON DUPLICATE KEY UPDATE `date` = VALUES(`date`), `title` = VALUES(`title`), `description` = VALUES(`description`), `media` = VALUES(`media`);", dbTblName.magazines);
+  try {
+    rows = await db.query(sql, [newRows]);
+    res.status(200).send({
+      result: langs.success,
+      message: langs.successfullySaved,
+      data: rows,
+    });
+  } catch (err) {
+    tracer.error(JSON.stringify(err));
+    tracer.error(__filename);
+    res.status(200).send({
+      result: langs.error,
+      message: langs.unknownServerError,
+      err,
+    });
+  }
+};
+
+const deleteMagazineProc = async (req, res, next) => {
+  const lang = req.get(consts.lang) || consts.defaultLanguage;
+  const langs = strings[lang];
+  const {id} = req.body;
+
+  const today = new Date();
+  const date = dateformat(today, "yyyy-mm-dd");
+
+  let sql = sprintf("UPDATE `%s` SET `deletedDate` = ? WHERE `id` = ?;", dbTblName.magazines);
+  try {
+    await db.query(sql, [date, id]);
+    _loadMagazines(req, res, next);
+  } catch (err) {
+    tracer.error(JSON.stringify(err));
+    tracer.error(__filename);
+    res.status(200).send({
+      result: langs.error,
+      message: langs.unknownServerError,
+      err,
+    });
+  }
+};
+
+const getMagazineProc = async (req, res, next) => {
+  const lang = req.get(consts.lang) || consts.defaultLanguage;
+  const langs = strings[lang];
+  const {id} = req.body;
+
+  let sql = sprintf("SELECT * FROM `%s` WHERE `id` = ?;", dbTblName.magazines);
+
+  try {
+    let rows = await db.query(sql, [id]);
+    if (rows.length > 0) {
+      res.status(200).send({
+        result: langs.success,
+        data: rows[0],
+      });
+    } else {
+      res.status(200).send({
+        result: langs.error,
+        message: langs.noData,
+      });
+    }
+  } catch (err) {
+    tracer.error(JSON.stringify(err));
+    tracer.error(__filename);
+    res.status(200).send({
+      result: langs.error,
+      message: langs.unknownServerError,
+      err,
+    });
+  }
+};
+
 const router = express.Router();
 
 router.post("/list", listProc);
@@ -523,5 +677,9 @@ router.post("/topics", topicsProc);
 router.post("/save-topic", saveTopicProc);
 router.post("/delete-topic", deleteTopicProc);
 router.post("/get-topic", getTopicProc);
+router.post("/magazines", magazinesProc);
+router.post("/save-magazine", saveMagazineProc);
+router.post("/delete-magazine", deleteMagazineProc);
+router.post("/get-magazine", getMagazineProc);
 
 export default router;

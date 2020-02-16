@@ -1,5 +1,6 @@
 export const uploadPath = {
   posts: "uploads/posts",
+  magazines: "uploads/magazines",
   news: "uploads/news",
   avatars: "uploads/avatars",
   aboutUs: "uploads/about-us",
