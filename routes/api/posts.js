@@ -471,6 +471,30 @@ const getMagazineProc = async (req, res, next) => {
   }
 };
 
+const latestMagazinesProc = async (req, res, next) => {
+  const lang = req.get(consts.lang) || consts.defaultLanguage;
+  const langs = strings[lang];
+  let {limit} = req.body;
+
+  let sql = sprintf("SELECT * FROM `%s` ORDER BY `timestamp` DESC LIMIT ?, ?;", dbTblName.magazines);
+
+  try {
+    let rows = await db.query(sql, [0, limit]);
+    res.status(200).send({
+      result: langs.success,
+      data: rows,
+    });
+  } catch (err) {
+    tracer.error(JSON.stringify(err));
+    tracer.error(__filename);
+    res.status(200).send({
+      result: langs.error,
+      message: langs.unknownServerError,
+      err,
+    });
+  }
+};
+
 const router = express.Router();
 
 router.post("/list", listProc);
@@ -482,6 +506,7 @@ router.post("/write-comment", writeComment);
 router.post("/post2topics", post2TopicsProc);
 router.post("/topics", topicsProc);
 router.post("/magazines", magazinesProc);
-router.post("/get-magazine", getMagazineProc)
+router.post("/get-magazine", getMagazineProc);
+router.post("/latest-magazines", latestMagazinesProc);
 
 export default router;
