@@ -107,3 +107,4 @@ dist
 .env
 
 public/uploads/*
+backend/server.development.js
