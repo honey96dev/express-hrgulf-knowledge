@@ -189,15 +189,15 @@ const packagesProc = async (req, res, next) => {
 const savePackageProc = async (req, res, next) => {
   const lang = req.get(consts.lang) || consts.defaultLanguage;
   const langs = strings[lang];
-  const {id, name, startDate, endDate, userId} = req.body;
+  const {id, name, startDate, endDate, requireAttachment, userId} = req.body;
 
   const today = new Date();
   const timestamp = today.getTime();
 
   const newRows = [
-    [id || null, timestamp, name, startDate, endDate, "" , ""],
+    [id || null, timestamp, name, startDate, endDate, requireAttachment, "" , ""],
   ];
-  let sql = sprintf("INSERT INTO `%s` VALUES ? ON DUPLICATE KEY UPDATE `name` = VALUES(`name`), `startDate` = VALUES(`startDate`), `endDate` = VALUES(`endDate`);", dbTblName.questionnairePackages);
+  let sql = sprintf("INSERT INTO `%s` VALUES ? ON DUPLICATE KEY UPDATE `name` = VALUES(`name`), `startDate` = VALUES(`startDate`), `endDate` = VALUES(`endDate`), `requireAttachment` = VALUES(`requireAttachment`);", dbTblName.questionnairePackages);
   try {
     let rows = await db.query(sql, [newRows]);
     res.status(200).send({

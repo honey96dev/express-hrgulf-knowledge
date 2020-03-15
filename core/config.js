@@ -44,6 +44,7 @@ const dbTblName = {
   videoSections: "video_sections",
   video2Sections: "video2sections",
   questionnairePackages: "questionnaire_packages",
+  questionnaireAttachments: "questionnaire_attachments",
   questionnaireQuestions: "questionnaire_questions",
   questionnaireQuestionsCount: "questionnaire_questions_count",
   questionnaireAnswers: "questionnaire_answers",

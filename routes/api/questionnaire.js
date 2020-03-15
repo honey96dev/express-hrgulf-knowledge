@@ -1,17 +1,21 @@
 import express from "express";
 import {sprintf} from "sprintf-js";
+import fs from "fs";
+import path from "path";
 import dateformat from "dateformat";
 import _ from "lodash";
+import getMAC from "getmac";
 import {dbTblName} from "core/config";
 import db from "core/db";
 import strings from "core/strings";
 import tracer from "core/tracer";
-import consts, {prefixCheckbox, prefixInput, questionTypes} from "core/consts";
+import helpers from "core/helpers";
+import consts, {prefixCheckbox, prefixInput} from "core/consts";
 
 const _loadPackages = async (req, res, next) => {
   const lang = req.get(consts.lang) || consts.defaultLanguage;
   const langs = strings[lang];
-  let {scope, page, pageSize, userId} = req.body;
+  let {scope, page, pageSize} = req.body;
   page || (page = 1);
   pageSize || (pageSize = consts.defaultPageSize);
   const start = pageSize * (page - 1);
@@ -66,6 +70,7 @@ const _loadQuestions = async (req, res, next) => {
 
   let sql = sprintf("SELECT Q.* FROM `%s` Q WHERE Q.packageId = ? AND Q.deletedDate = ? ORDER BY Q.timestamp;", dbTblName.questionnaireQuestions);
 
+  !userId && (userId = getMAC());
   try {
     let rows = await db.query(sql, [packageId, "", start, pageSize]);
 
@@ -118,6 +123,7 @@ const _loadResult = async (req, res, next) => {
   const date = dateformat(today, "yyyy-mm-dd");
   let sql = sprintf("SELECT Q.*, C.count `answersCount` FROM `%s` Q LEFT JOIN `%s` C ON C.questionId = Q.id WHERE Q.packageId = ? AND Q.deletedDate = ? ORDER BY Q.timestamp ASC LIMIT ?, ?;", dbTblName.questionnaireQuestions, dbTblName.questionnaireAnsweredCount);
 
+  !userId && (userId = getMAC());
   try {
     let rows = await db.query(sql, [packageId, "", start, pageSize]);
     let rows1;
@@ -168,17 +174,18 @@ const packagesProc = async (req, res, next) => {
 const getPackageProc = async (req, res, next) => {
   const lang = req.get(consts.lang) || consts.defaultLanguage;
   const langs = strings[lang];
-  let {packageId, page, pageSize} = req.body;
+  let {packageId, page, pageSize, userId} = req.body;
   page || (page = 1);
   pageSize || (pageSize = consts.defaultPageSize);
   const start = pageSize * (page - 1);
 
+  !userId && (userId = getMAC());
   const today = new Date();
   const date = dateformat(today, "yyyy-mm-dd");
-  let sql = sprintf("SELECT * FROM `%s` Q WHERE Q.id = ?;", dbTblName.questionnairePackages);
+  let sql = sprintf("SELECT Q.*, A.attachment FROM `%s` Q LEFT JOIN `%s` A ON A.questionnaireId = Q.id AND A.userId = ? WHERE Q.id = ?;", dbTblName.questionnairePackages, dbTblName.questionnaireAttachments);
 
   try {
-    let rows = await db.query(sql, [packageId]);
+    let rows = await db.query(sql, [userId, packageId]);
 
     if (rows.length > 0) {
       res.status(200).send({
@@ -240,7 +247,10 @@ const getProc = async (req, res, next) => {
 const updateProc = async (req, res, next) => {
   const lang = req.get(consts.lang) || consts.defaultLanguage;
   const langs = strings[lang];
-  const {userId, answers} = req.body;
+  let {questionnaireId, userId, answers, file} = req.body;
+
+  !userId && (userId = getMAC());
+  answers = JSON.parse(answers);
 
   const today = new Date();
   const date = dateformat(today, "yyyy-mm-dd");
@@ -251,7 +261,30 @@ const updateProc = async (req, res, next) => {
   let checkAnswers = [];
   let newRows = [];
   let sql;
+
+  let fileName;
+  let attachment = "";
+  const cwd = process.cwd();
+  const fileDir = path.join(cwd, "public", consts.uploadPath.questionnaire);
+  if (!!file) {
+    sql = sprintf("SELECT * FROM `%s` WHERE questionnaireId = ? AND userId = ?;", dbTblName.questionnaireAttachments);
+    const rows = await db.query(sql, [questionnaireId, userId]);
+    if (!!rows.length) {
+      fs.unlink(path.join(cwd, "public", rows[0]["attachment"]), err => {
+
+      });
+    }
+    fileName = await helpers.uploadFile(file, fileDir);
+    attachment = `${consts.uploadPath.questionnaire}/${fileName}`;
+    newRows = [
+      [questionnaireId, userId, attachment]
+    ];
+    sql = sprintf("INSERT INTO `%s` VALUES ? ON DUPLICATE KEY UPDATE `attachment` = VALUES(`attachment`);", dbTblName.questionnaireAttachments);
+    await db.query(sql, [newRows]);
+  }
+
   try {
+
     Object.keys(answers).map(async item => {
       answers[item]['type'] === prefixCheckbox && checkAnswers.push({questionId: item, answer: answers[item]['answer']});
       answers[item]['type'] === prefixInput && inputAnswers.push({questionId: item, answer: answers[item]['answer']});
