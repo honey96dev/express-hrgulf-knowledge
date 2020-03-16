@@ -4,7 +4,6 @@ import fs from "fs";
 import path from "path";
 import dateformat from "dateformat";
 import _ from "lodash";
-import getMAC from "getmac";
 import {dbTblName} from "core/config";
 import db from "core/db";
 import strings from "core/strings";
@@ -70,7 +69,6 @@ const _loadQuestions = async (req, res, next) => {
 
   let sql = sprintf("SELECT Q.* FROM `%s` Q WHERE Q.packageId = ? AND Q.deletedDate = ? ORDER BY Q.timestamp;", dbTblName.questionnaireQuestions);
 
-  !userId && (userId = getMAC());
   try {
     let rows = await db.query(sql, [packageId, "", start, pageSize]);
 
@@ -123,7 +121,6 @@ const _loadResult = async (req, res, next) => {
   const date = dateformat(today, "yyyy-mm-dd");
   let sql = sprintf("SELECT Q.*, C.count `answersCount` FROM `%s` Q LEFT JOIN `%s` C ON C.questionId = Q.id WHERE Q.packageId = ? AND Q.deletedDate = ? ORDER BY Q.timestamp ASC LIMIT ?, ?;", dbTblName.questionnaireQuestions, dbTblName.questionnaireAnsweredCount);
 
-  !userId && (userId = getMAC());
   try {
     let rows = await db.query(sql, [packageId, "", start, pageSize]);
     let rows1;
@@ -179,7 +176,6 @@ const getPackageProc = async (req, res, next) => {
   pageSize || (pageSize = consts.defaultPageSize);
   const start = pageSize * (page - 1);
 
-  !userId && (userId = getMAC());
   const today = new Date();
   const date = dateformat(today, "yyyy-mm-dd");
   let sql = sprintf("SELECT Q.*, A.attachment FROM `%s` Q LEFT JOIN `%s` A ON A.questionnaireId = Q.id AND A.userId = ? WHERE Q.id = ?;", dbTblName.questionnairePackages, dbTblName.questionnaireAttachments);
@@ -249,7 +245,6 @@ const updateProc = async (req, res, next) => {
   const langs = strings[lang];
   let {questionnaireId, userId, answers, file} = req.body;
 
-  !userId && (userId = getMAC());
   answers = JSON.parse(answers);
 
   const today = new Date();
@@ -289,7 +284,6 @@ const updateProc = async (req, res, next) => {
       answers[item]['type'] === prefixCheckbox && checkAnswers.push({questionId: item, answer: answers[item]['answer']});
       answers[item]['type'] === prefixInput && inputAnswers.push({questionId: item, answer: answers[item]['answer']});
     });
-    tracer.info(userId, inputAnswers, checkAnswers);
 
     for (let answer of inputAnswers) {
       sql = sprintf("SELECT * FROM `%s` WHERE `questionId` = ? AND `answer` = ?;", dbTblName.questionnaireAnswers);
