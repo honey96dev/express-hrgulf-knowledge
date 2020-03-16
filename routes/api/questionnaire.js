@@ -289,22 +289,7 @@ const updateProc = async (req, res, next) => {
       answers[item]['type'] === prefixCheckbox && checkAnswers.push({questionId: item, answer: answers[item]['answer']});
       answers[item]['type'] === prefixInput && inputAnswers.push({questionId: item, answer: answers[item]['answer']});
     });
-    tracer.info(inputAnswers, checkAnswers);
-
-    for (let answer of checkAnswers) {
-      newRows = [];
-      for (let answerId of answer.answer) {
-        newRows.push([answer.questionId, userId, answerId, 1, timestamp, date, time]);
-      }
-
-      sql = sprintf("UPDATE `%s` SET `checked` = ? WHERE `userId` = ? AND `questionId` = ?;", dbTblName.questionnaireResult);
-      await db.query(sql, [0, userId, answer.questionId]);
-
-      if (!newRows.length) continue;
-
-      sql = sprintf("INSERT INTO `%s` VALUES ? ON DUPLICATE KEY UPDATE `checked` = VALUES(`checked`), `timestamp` = VALUES(`timestamp`), `date` = VALUES(`date`), `time` = VALUES(`time`);", dbTblName.questionnaireResult);
-      await db.query(sql, [newRows]);
-    }
+    tracer.info(userId, inputAnswers, checkAnswers);
 
     for (let answer of inputAnswers) {
       sql = sprintf("SELECT * FROM `%s` WHERE `questionId` = ? AND `answer` = ?;", dbTblName.questionnaireAnswers);
@@ -330,6 +315,21 @@ const updateProc = async (req, res, next) => {
 
       sql = sprintf("DELETE FROM `%s` WHERE `questionId` = ? AND `userId` = ?;", dbTblName.questionnaireResult);
       await db.query(sql, [answer['questionId'], userId]);
+      sql = sprintf("INSERT INTO `%s` VALUES ? ON DUPLICATE KEY UPDATE `checked` = VALUES(`checked`), `timestamp` = VALUES(`timestamp`), `date` = VALUES(`date`), `time` = VALUES(`time`);", dbTblName.questionnaireResult);
+      await db.query(sql, [newRows]);
+    }
+
+    for (let answer of checkAnswers) {
+      newRows = [];
+      for (let answerId of answer.answer) {
+        newRows.push([answer.questionId, userId, answerId, 1, timestamp, date, time]);
+      }
+
+      sql = sprintf("UPDATE `%s` SET `checked` = ? WHERE `userId` = ? AND `questionId` = ?;", dbTblName.questionnaireResult);
+      await db.query(sql, [0, userId, answer.questionId]);
+
+      if (!newRows.length) continue;
+
       sql = sprintf("INSERT INTO `%s` VALUES ? ON DUPLICATE KEY UPDATE `checked` = VALUES(`checked`), `timestamp` = VALUES(`timestamp`), `date` = VALUES(`date`), `time` = VALUES(`time`);", dbTblName.questionnaireResult);
       await db.query(sql, [newRows]);
     }
