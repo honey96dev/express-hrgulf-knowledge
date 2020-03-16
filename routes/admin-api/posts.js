@@ -63,7 +63,7 @@ const _loadData = async (req, res, next) => {
       data: rows,
     });
   } catch (err) {
-    tracer.error(JSON.stringify(err));
+    tracer.error(err);
     tracer.error(__filename);
     res.status(200).send({
       result: langs.error,
@@ -101,7 +101,7 @@ const _loadTopics = async (req, res, next) => {
       data: rows,
     });
   } catch (err) {
-    tracer.error(JSON.stringify(err));
+    tracer.error(err);
     tracer.error(__filename);
     res.status(200).send({
       result: langs.error,
@@ -139,7 +139,7 @@ const _loadMagazines = async (req, res, next) => {
       data: rows,
     });
   } catch (err) {
-    tracer.error(JSON.stringify(err));
+    tracer.error(err);
     tracer.error(__filename);
     res.status(200).send({
       result: langs.error,
@@ -171,7 +171,7 @@ const saveProc = async (req, res, next) => {
         data: rows,
       });
     } catch (err) {
-      tracer.error(JSON.stringify(err));
+      tracer.error(err);
       tracer.error(__filename);
       res.status(200).send({
         result: langs.error,
@@ -228,7 +228,7 @@ const saveProc = async (req, res, next) => {
           data: rows,
         });
       } catch (err) {
-        tracer.error(JSON.stringify(err));
+        tracer.error(err);
         tracer.error(__filename);
         res.status(200).send({
           result: langs.error,
@@ -238,7 +238,7 @@ const saveProc = async (req, res, next) => {
       }
     });
     file.on("error", err => {
-      tracer.error(JSON.stringify(err));
+      tracer.error(err);
       tracer.error(__filename);
       res.status(200).send({
         result: langs.error,
@@ -263,7 +263,7 @@ const deleteProc = async (req, res, next) => {
     await db.query(sql, [date, id]);
     _loadData(req, res, next);
   } catch (err) {
-    tracer.error(JSON.stringify(err));
+    tracer.error(err);
     tracer.error(__filename);
     res.status(200).send({
       result: langs.error,
@@ -294,7 +294,7 @@ const getProc = async (req, res, next) => {
       });
     }
   } catch (err) {
-    tracer.error(JSON.stringify(err));
+    tracer.error(err);
     tracer.error(__filename);
     res.status(200).send({
       result: langs.error,
@@ -318,7 +318,7 @@ const commentList = async (req, res, next) => {
       data: rows,
     });
   } catch (err) {
-    tracer.error(JSON.stringify(err));
+    tracer.error(err);
     tracer.error(__filename);
     res.status(200).send({
       result: langs.error,
@@ -341,7 +341,7 @@ const deleteComment = async (req, res, next) => {
     await db.query(sql, [date, postId, userId]);
     commentList(req, res, next);
   } catch (err) {
-    tracer.error(JSON.stringify(err));
+    tracer.error(err);
     tracer.error(__filename);
     res.status(200).send({
       result: langs.error,
@@ -366,7 +366,7 @@ const post2TopicsProc = async (req, res, next) => {
       data: rows,
     });
   } catch (err) {
-    tracer.error(JSON.stringify(err));
+    tracer.error(err);
     tracer.error(__filename);
     res.status(200).send({
       result: langs.error,
@@ -389,7 +389,7 @@ const allowProc = async (req, res, next) => {
     await db.query(sql, [!!allow ? date : "", id]);
     _loadData(req, res, next);
   } catch (err) {
-    tracer.error(JSON.stringify(err));
+    tracer.error(err);
     tracer.error(__filename);
     res.status(200).send({
       result: langs.error,
@@ -411,7 +411,7 @@ const denyProc = async (req, res, next) => {
     await db.query(sql, [date, id]);
     _loadData(req, res, next);
   } catch (err) {
-    tracer.error(JSON.stringify(err));
+    tracer.error(err);
     tracer.error(__filename);
     res.status(200).send({
       result: langs.error,
@@ -446,7 +446,7 @@ const countProc = async (req, res, next) => {
       }
     });
   } catch (err) {
-    tracer.error(JSON.stringify(err));
+    tracer.error(err);
     tracer.error(__filename);
     res.status(200).send({
       result: langs.error,
@@ -482,7 +482,7 @@ const saveTopicProc = async (req, res, next) => {
       data: rows,
     });
   } catch (err) {
-    tracer.error(JSON.stringify(err));
+    tracer.error(err);
     tracer.error(__filename);
     res.status(200).send({
       result: langs.error,
@@ -505,7 +505,7 @@ const deleteTopicProc = async (req, res, next) => {
     await db.query(sql, [date, id]);
     _loadTopics(req, res, next);
   } catch (err) {
-    tracer.error(JSON.stringify(err));
+    tracer.error(err);
     tracer.error(__filename);
     res.status(200).send({
       result: langs.error,
@@ -536,7 +536,7 @@ const getTopicProc = async (req, res, next) => {
       });
     }
   } catch (err) {
-    tracer.error(JSON.stringify(err));
+    tracer.error(err);
     tracer.error(__filename);
     res.status(200).send({
       result: langs.error,
@@ -597,7 +597,7 @@ const saveMagazineProc = async (req, res, next) => {
       data: rows,
     });
   } catch (err) {
-    tracer.error(JSON.stringify(err));
+    tracer.error(err);
     tracer.error(__filename);
     res.status(200).send({
       result: langs.error,
@@ -620,7 +620,7 @@ const deleteMagazineProc = async (req, res, next) => {
     await db.query(sql, [date, id]);
     _loadMagazines(req, res, next);
   } catch (err) {
-    tracer.error(JSON.stringify(err));
+    tracer.error(err);
     tracer.error(__filename);
     res.status(200).send({
       result: langs.error,
@@ -651,7 +651,7 @@ const getMagazineProc = async (req, res, next) => {
       });
     }
   } catch (err) {
-    tracer.error(JSON.stringify(err));
+    tracer.error(err);
     tracer.error(__filename);
     res.status(200).send({
       result: langs.error,

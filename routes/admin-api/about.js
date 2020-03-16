@@ -34,7 +34,7 @@ const loadAboutUs = async (req, res, next) => {
       data,
     });
   } catch (err) {
-    tracer.error(JSON.stringify(err));
+    tracer.error(err);
     tracer.error(__filename);
     res.status(200).send({
       result: langs.error,
@@ -100,7 +100,7 @@ const saveAboutUs = async (req, res, next) => {
             data: rows,
           });
         } catch (err) {
-          tracer.error(JSON.stringify(err));
+          tracer.error(err);
           tracer.error(__filename);
           res.status(200).send({
             result: langs.error,
@@ -110,7 +110,7 @@ const saveAboutUs = async (req, res, next) => {
         }
       });
       video.on("error", err => {
-        tracer.error(JSON.stringify(err));
+        tracer.error(err);
         tracer.error(__filename);
         res.status(200).send({
           result: langs.error,
@@ -121,7 +121,7 @@ const saveAboutUs = async (req, res, next) => {
       video.pipe(videoWritable);
     });
     brochure.on("error", err => {
-      tracer.error(JSON.stringify(err));
+      tracer.error(err);
       tracer.error(__filename);
       res.status(200).send({
         result: langs.error,
@@ -180,7 +180,7 @@ const saveAboutUsBrochure = async (req, res, next) => {
           },
         });
       } catch (err) {
-        tracer.error(JSON.stringify(err));
+        tracer.error(err);
         tracer.error(__filename);
         res.status(200).send({
           result: langs.error,
@@ -190,7 +190,7 @@ const saveAboutUsBrochure = async (req, res, next) => {
       }
     });
     brochure.on("error", err => {
-      tracer.error(JSON.stringify(err));
+      tracer.error(err);
       tracer.error(__filename);
       res.status(200).send({
         result: langs.error,
@@ -250,7 +250,7 @@ const saveAboutUsVideo = async (req, res, next) => {
           },
         });
       } catch (err) {
-        tracer.error(JSON.stringify(err));
+        tracer.error(err);
         tracer.error(__filename);
         res.status(200).send({
           result: langs.error,
@@ -260,7 +260,7 @@ const saveAboutUsVideo = async (req, res, next) => {
       }
     });
     video.on("error", err => {
-      tracer.error(JSON.stringify(err));
+      tracer.error(err);
       tracer.error(__filename);
       res.status(200).send({
         result: langs.error,

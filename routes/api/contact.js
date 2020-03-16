@@ -32,7 +32,7 @@ const usProc = async (req, res, next) => {
       message: langs.successfullySent
     });
   } catch (err) {
-    tracer.error(JSON.stringify(err));
+    tracer.error(err);
     tracer.error(__filename);
     res.status(200).send({
       result: langs.error,
@@ -60,7 +60,7 @@ const consultantsProc = async (req, res, next) => {
   //     data: rows,
   //   });
   // } catch (err) {
-  //   tracer.error(JSON.stringify(err));
+  //   tracer.error(err);
   //   tracer.error(__filename);
   //   res.status(200).send({
   //     result: langs.error,
@@ -84,7 +84,7 @@ const consultantsProc = async (req, res, next) => {
 
   request(requestOptions, (err, response, body) => {
     if (!!err) {
-      tracer.error(JSON.stringify(err));
+      tracer.error(err);
       tracer.error(__filename);
       res.status(200).send({
         result: langs.error,

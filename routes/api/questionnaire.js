@@ -50,7 +50,7 @@ const _loadPackages = async (req, res, next) => {
       data: rows,
     });
   } catch (err) {
-    tracer.error(JSON.stringify(err));
+    tracer.error(err);
     tracer.error(__filename);
     res.status(200).send({
       result: langs.error,
@@ -80,12 +80,12 @@ const _loadQuestions = async (req, res, next) => {
       rows1 = await db.query(sql, [row.id]);
       row["answers"] = rows1;
 
-      sql = sprintf("SELECT * FROM `%s` WHERE `questionId` = ? AND `userId` = ? AND `checked` = ?;", dbTblName.questionnaireResult);
-      rows1 = await db.query(sql, [row.id, userId, 1]);
+      // sql = sprintf("SELECT * FROM `%s` WHERE `questionId` = ? AND `userId` = ? AND `checked` = ?;", dbTblName.questionnaireResult);
+      // rows1 = await db.query(sql, [row.id, userId, 1]);
       row["answered"] = [];
-      for (let row1 of rows1) {
-        row["answered"].push(row1["answerId"]);
-      }
+      // for (let row1 of rows1) {
+      //   row["answered"].push(row1["answerId"]);
+      // }
     }
 
     sql = sprintf("SELECT COUNT(`id`) `count` FROM `%s` WHERE `packageId` = ? AND `deletedDate` = ?;", dbTblName.questionnaireQuestions);
@@ -101,7 +101,7 @@ const _loadQuestions = async (req, res, next) => {
       message: langs.successfullyPosted,
     });
   } catch (err) {
-    tracer.error(JSON.stringify(err));
+    tracer.error(err);
     tracer.error(__filename);
     res.status(200).send({
       result: langs.error,
@@ -157,7 +157,7 @@ const _loadResult = async (req, res, next) => {
       data: rows,
     });
   } catch (err) {
-    tracer.error(JSON.stringify(err));
+    tracer.error(err);
     tracer.error(__filename);
     res.status(200).send({
       result: langs.error,
@@ -199,7 +199,7 @@ const getPackageProc = async (req, res, next) => {
       });
     }
   } catch (err) {
-    tracer.error(JSON.stringify(err));
+    tracer.error(err);
     tracer.error(__filename);
     res.status(200).send({
       result: langs.error,
@@ -234,7 +234,7 @@ const getProc = async (req, res, next) => {
       });
     }
   } catch (err) {
-    tracer.error(JSON.stringify(err));
+    tracer.error(err);
     tracer.error(__filename);
     res.status(200).send({
       result: langs.error,
@@ -289,6 +289,7 @@ const updateProc = async (req, res, next) => {
       answers[item]['type'] === prefixCheckbox && checkAnswers.push({questionId: item, answer: answers[item]['answer']});
       answers[item]['type'] === prefixInput && inputAnswers.push({questionId: item, answer: answers[item]['answer']});
     });
+    tracer.info(inputAnswers, checkAnswers);
 
     for (let answer of checkAnswers) {
       newRows = [];
@@ -335,7 +336,7 @@ const updateProc = async (req, res, next) => {
 
     await _loadQuestions(req, res, next);
   } catch (err) {
-    tracer.error(JSON.stringify(err));
+    tracer.error(err);
     tracer.error(__filename);
     res.status(200).send({
       result: langs.error,
