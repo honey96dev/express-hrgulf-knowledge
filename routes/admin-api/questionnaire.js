@@ -7,6 +7,7 @@ import db from "core/db";
 import strings from "core/strings";
 import tracer from "core/tracer";
 import consts, {prefixInput, questionTypes} from "core/consts";
+import path from "path";
 
 const _loadPackages = async (req, res, next) => {
   const lang = req.get(consts.lang) || consts.defaultLanguage;
@@ -175,6 +176,52 @@ const _loadResult = async (req, res, next) => {
     tracer.error(err);
     tracer.error(__filename);
     res.status(200).send({
+      result: langs.error,
+      message: langs.unknownServerError,
+      err,
+    });
+  }
+};
+
+const _loadAttachments = async (req, res, next) => {
+  const lang = req.get(consts.lang) || consts.defaultLanguage;
+  const langs = strings[lang];
+  let {questionnaireId, page, pageSize} = req.body;
+  page || (page = 1);
+  pageSize || (pageSize = consts.defaultPageSize);
+  const start = pageSize * (page - 1);
+
+  try {
+    let sql = sprintf("SELECT A.*, U.id `applicantId`, U.id `applicantId`, U.firstName, U.fatherName, U.lastName FROM `%s` A LEFT JOIN `%s` U ON U.id LIKE A.userId WHERE A.questionnaireId = ? ORDER BY A.timestamp DESC LIMIT ?, ?;", dbTblName.questionnaireAttachments, dbTblName.users);
+    let rows = await db.query(sql, [questionnaireId, start, pageSize]);
+    tracer.info(sql, questionnaireId);
+    let number = start + 1;
+    let timestamp;
+    for (let row of rows) {
+      row["number"] = number++;
+      try {
+        row["timestamp2"] = dateformat(new Date(row["timestamp"]), "yyyy-mm-dd HH:MM:ss");
+      } catch (err) {
+        row["timestamp2"] = "";
+      }
+    }
+
+    sql = sprintf("SELECT COUNT(*) `count` FROM `%s` A WHERE A.questionnaireId = ? ;", dbTblName.questionnaireAttachments);
+    tracer.info(sql, questionnaireId);
+    let count = await db.query(sql, [questionnaireId, start, pageSize]);
+    let pageCount = 0;
+    count.length > 0 && (pageCount = Math.ceil(count[0]["count"] / pageSize));
+
+    res.status(200).send({
+      result: langs.success,
+      count: count[0]["count"],
+      pageCount,
+      data: rows,
+    });
+  } catch (err) {
+    tracer.error(err);
+    tracer.error(__filename);
+    res.status(400).send({
       result: langs.error,
       message: langs.unknownServerError,
       err,
@@ -518,6 +565,43 @@ const countProc = async (req, res, next) => {
   }
 };
 
+const attachmentsProc = async (req, res, next) => {
+  _loadAttachments(req, res, next);
+};
+
+const downloadAttachmentProc = async (req, res, next) => {
+  const lang = req.get(consts.lang) || consts.defaultLanguage;
+  const langs = strings[lang];
+  let {questionnaireId, userId} = req.body;
+
+  const cwd = process.cwd();
+
+  try {
+    let sql = sprintf("SELECT * FROM `%s` WHERE `questionnaireId` = ? AND `userId` = ?;", dbTblName.questionnaireAttachments);
+    let rows = await db.query(sql, [questionnaireId, userId]);
+    if (!!rows.length) {
+      res.sendFile(path.join(cwd, "public", rows[0]["attachment"]));
+    } else {
+      res.status(404).send({
+        result: langs.error,
+        message: langs.notFound,
+      });
+    }
+  } catch (err) {
+    tracer.error(err);
+    tracer.error(__filename);
+    res.status(400).send({
+      result: langs.error,
+      message: langs.unknownServerError,
+      err,
+    });
+  }
+};
+
+const downloadResultProc = async (req, res, next) => {
+
+};
+
 const router = express.Router();
 
 router.post("/packages", packagesProc);
@@ -535,5 +619,8 @@ router.post("/get-answer", getAnswerProc);
 router.post("/result", resultProc);
 router.post("/publish", publishProc);
 router.post("/count", countProc);
+router.post("/attachments", attachmentsProc);
+router.post("/download-attachment", downloadAttachmentProc);
+router.post("/download-result", downloadResultProc);
 
 export default router;

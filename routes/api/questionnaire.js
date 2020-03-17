@@ -38,7 +38,7 @@ const _loadPackages = async (req, res, next) => {
     let rows1;
 
     sql = sprintf("SELECT COUNT(`id`) `count` FROM `%s` WHERE `startDate` <= ? AND `endDate` >= ? AND `deletedDate` = ?;", dbTblName.questionnairePackages);
-    let count = await db.query(sql, [date, date, ""]);
+    let count = await db.query(sql, [date, scope === consts.current ? date : "", ""]);
     let pageCount = 0;
     count.length > 0 && (pageCount = Math.ceil(count[0]["count"] / pageSize));
 
@@ -274,7 +274,7 @@ const updateProc = async (req, res, next) => {
     newRows = [
       [questionnaireId, userId, attachment]
     ];
-    sql = sprintf("INSERT INTO `%s` VALUES ? ON DUPLICATE KEY UPDATE `attachment` = VALUES(`attachment`);", dbTblName.questionnaireAttachments);
+    sql = sprintf("INSERT INTO `%s`(`questionnaireId`, `userId`, `attachment`) VALUES ? ON DUPLICATE KEY UPDATE `attachment` = VALUES(`attachment`);", dbTblName.questionnaireAttachments);
     await db.query(sql, [newRows]);
   }
 
