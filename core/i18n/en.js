@@ -45,4 +45,11 @@ export default {
   tokenIsExpired: "Token is expired. Retry to reset the password.",
   tokenIsNotFound: "Token is invalid. Retry to reset the password.",
   tokenIsAlreadyUsed: "Token is already used. Retry to reset the password.",
+  questionnaire: {
+    sheetname: "Result",
+    number: "No.",
+    question: "Question",
+    answer: "Answer",
+    count: "Count",
+  },
 };

@@ -45,4 +45,11 @@ export default {
   tokenIsExpired: "انتهت صلاحية الرمز. أعد المحاولة لإعادة تعيين كلمة المرور.",
   tokenIsNotFound: "الرمز غير صالح. أعد المحاولة لإعادة تعيين كلمة المرور.",
   tokenIsAlreadyUsed: "Token يستخدم بالفعل. أعد المحاولة لإعادة تعيين كلمة المرور.",
+  questionnaire: {
+    sheetname: "نتيجة",
+    number: "رقم",
+    question: "سؤال",
+    answer: "إجابة",
+    count: "العد",
+  },
 };

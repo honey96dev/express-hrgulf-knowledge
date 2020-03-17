@@ -17,6 +17,7 @@
     "ddos": "^0.2.1",
     "debug": "~4.1.1",
     "email-templates": "^7.0.2",
+    "export-to-excel": "^0.2.1",
     "express": "~4.17.1",
     "express-form-data": "^2.0.10",
     "express-jwt": "^5.3.1",

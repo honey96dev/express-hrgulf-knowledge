@@ -2,12 +2,15 @@ import express from "express";
 import {sprintf} from "sprintf-js";
 import dateformat from "dateformat";
 import _ from "lodash";
+import path from "path";
+import fs from "fs";
+import {exportXLSX} from "export-to-excel";
+import uuid from "uuid";
+import consts, {prefixInput, questionTypes} from "core/consts";
 import {dbTblName} from "core/config";
 import db from "core/db";
 import strings from "core/strings";
 import tracer from "core/tracer";
-import consts, {prefixInput, questionTypes} from "core/consts";
-import path from "path";
 
 const _loadPackages = async (req, res, next) => {
   const lang = req.get(consts.lang) || consts.defaultLanguage;
@@ -165,21 +168,25 @@ const _loadResult = async (req, res, next) => {
       row["answered"] = !!rows1[0]["count"];
     }
 
-
-    res.status(200).send({
-      result: langs.success,
+    return {
       count: count[0]["count"],
       pageCount,
       data: rows,
-    });
+    };
+    //
+    // res.status(200).send({
+    //   result: langs.success,
+    //
+    // });
   } catch (err) {
-    tracer.error(err);
-    tracer.error(__filename);
-    res.status(200).send({
-      result: langs.error,
-      message: langs.unknownServerError,
-      err,
-    });
+    throw err;
+    // tracer.error(err);
+    // tracer.error(__filename);
+    // res.status(200).send({
+    //   result: langs.error,
+    //   message: langs.unknownServerError,
+    //   err,
+    // });
   }
 };
 
@@ -194,7 +201,7 @@ const _loadAttachments = async (req, res, next) => {
   try {
     let sql = sprintf("SELECT A.*, U.id `applicantId`, U.id `applicantId`, U.firstName, U.fatherName, U.lastName FROM `%s` A LEFT JOIN `%s` U ON U.id LIKE A.userId WHERE A.questionnaireId = ? ORDER BY A.timestamp DESC LIMIT ?, ?;", dbTblName.questionnaireAttachments, dbTblName.users);
     let rows = await db.query(sql, [questionnaireId, start, pageSize]);
-    tracer.info(sql, questionnaireId);
+
     let number = start + 1;
     let timestamp;
     for (let row of rows) {
@@ -207,7 +214,7 @@ const _loadAttachments = async (req, res, next) => {
     }
 
     sql = sprintf("SELECT COUNT(*) `count` FROM `%s` A WHERE A.questionnaireId = ? ;", dbTblName.questionnaireAttachments);
-    tracer.info(sql, questionnaireId);
+
     let count = await db.query(sql, [questionnaireId, start, pageSize]);
     let pageCount = 0;
     count.length > 0 && (pageCount = Math.ceil(count[0]["count"] / pageSize));
@@ -500,7 +507,23 @@ const getAnswerProc = async (req, res, next) => {
 };
 
 const resultProc = async (req, res, next) => {
-  _loadResult(req, res, next);
+  const lang = req.get(consts.lang) || consts.defaultLanguage;
+  const langs = strings[lang];
+  try {
+    const data = await _loadResult(req, res, next);
+    res.status(200).send({
+      ...data,
+      result: langs.success,
+    });
+  } catch (err) {
+    tracer.error(err);
+    tracer.error(__filename);
+    res.status(200).send({
+      result: langs.error,
+      message: langs.unknownServerError,
+      err,
+    });
+  }
 };
 
 const publishProc = async (req, res, next) => {
@@ -599,7 +622,80 @@ const downloadAttachmentProc = async (req, res, next) => {
 };
 
 const downloadResultProc = async (req, res, next) => {
+  const lang = req.get(consts.lang) || consts.defaultLanguage;
+  const langs = strings[lang];
 
+  try {
+    const {data} = await _loadResult(req, res, next);
+    // const {data} = data;
+    const headers = [
+      {
+        "fieldName": "number",
+        "displayName": langs.questionnaire.number,
+        "cellWidth": 7
+      }, {
+        "fieldName": "question",
+        "displayName": langs.questionnaire.question,
+        "cellWidth": 60
+      }, {
+        "fieldName": "answer",
+        "displayName": langs.questionnaire.answer,
+        "cellWidth": 25
+      }, {
+        "fieldName": "count",
+        "displayName": langs.questionnaire.count,
+        "cellWidth": 8
+      },
+    ];
+    let rows = [];
+
+    let index = 1;
+    for (let item of data) {
+      rows.push({
+        number: index++,
+        question: item.question,
+        answer: "",
+        count: "",
+      });
+      for (let answer of item.answers) {
+        rows.push({
+          number: "",
+          question: "",
+          answer: answer.answer,
+          count: `${answer.count}/${item.answersCount}`,
+        });
+      }
+    }
+
+    const filename = uuid();
+    const cwd = process.cwd();
+    let filepath = path.join(cwd, "temp", `${filename}`);
+    // exportToExcel.
+    filepath = exportXLSX({
+      filename: filepath,
+      sheetname: langs.questionnaire.sheetname,
+      title: headers,
+      data: rows,
+    }, res => {
+      tracer.info(filepath, res);
+    }, err => {
+      tracer.err(filepath, err);
+    });
+
+    res.sendFile(filepath, undefined, res => {
+      fs.unlink(filepath, res => {
+
+      });
+    });
+  } catch (err) {
+    tracer.error(err);
+    tracer.error(__filename);
+    res.status(400).send({
+      result: langs.error,
+      message: langs.unknownServerError,
+      err,
+    });
+  }
 };
 
 const router = express.Router();
